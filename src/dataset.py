@@ -2,6 +2,7 @@ import transformers
 # from torch.nn.utils.rnn import pad_sequence
 import torch
 from torch.utils.data import TensorDataset, DataLoader 
+from nltk.tokenize import sent_tokenize
 
 LABEL_LIST = ['background','objective','methods','results','conclusions']   ## 0 - <pad>, 1 - <sos>, 2 - <background> and so on 
 
@@ -16,10 +17,10 @@ def load_data(data_path, max_par_len):
         for line in data_file_lines[1:]:  # ignore first line which is ID
             if line.startswith('###'):
                 texts.append(abstract)
-                if(len(abs_labels) < max_par_len):
-                    pad_labels = [0 for _ in range(max_par_len - len(abs_labels))]
+                if(len(abs_labels) < max_par_len+1):
+                    pad_labels = [0 for _ in range(max_par_len+1 - len(abs_labels))]
                     abs_labels.extend(pad_labels)
-                labels.append(abs_labels[:max_par_len])
+                labels.append(abs_labels[:max_par_len+1])
                 abstract = ""
                 abs_labels = [1]
                 continue
@@ -27,13 +28,16 @@ def load_data(data_path, max_par_len):
             abstract += txt.lower()+'\n'
             abs_labels.append(LABEL_LIST.index(label.lower())+2)
         
-    return texts, torch.Tensor(labels)
+    # texts = texts[:30]
+    # labels = labels[:30]
+    return texts, torch.Tensor(labels).long()
 
 def tokenize(paragraphs, tokenizer, max_par_len, max_seq_len):
     input_ids = []
-    for para in paragraphs[:max_par_len]:
+    for para in paragraphs:
+        sentences = sent_tokenize(para)
         para_ids = []
-        for sent in para:
+        for sent in sentences[:max_par_len]:
             try:
                 encoded_sent = tokenizer.encode(
                     sent,
@@ -60,7 +64,7 @@ def tokenize(paragraphs, tokenizer, max_par_len, max_seq_len):
 def tokenize_and_pad(paragraphs, tokenizer, max_par_len, max_seq_len):
     input_ids = tokenize(paragraphs,tokenizer,max_par_len,max_seq_len)
     # input_ids = pad_sequence(input_ids,batch_first=True)
-    input_ids = torch.Tensor(input_ids)
+    input_ids = torch.Tensor(input_ids).long()
     input_ids = input_ids[:,:max_par_len, :max_seq_len]        ## Hopefully not required
     # assert tuple(input_ids.shape) == tuple(len(paragraphs), max_par_len, max_seq_len)
     # mask = (input_ids!=0).int()

@@ -35,7 +35,7 @@ class SentenceEncoder(nn.Module):
         #     max_seq_len,
         #     embed_path
         # )
-        self.word_encoder = AutoModel.from_pretrained("dmis-lab/biobert-base-cased-v1.1")
+        self.word_level_encoder = AutoModel.from_pretrained("dmis-lab/biobert-base-cased-v1.1")
         ## Should we keep a fc layer to reshape the output layers?
         self.reshape_fc = nn.Linear(768,embed_size)
         self.reshape_fc_pool = nn.Linear(768,embed_size)
@@ -70,11 +70,18 @@ class SentenceEncoder(nn.Module):
         positions = torch.arange(0,par_len).expand(N,par_len).to(self.device)   #position - N,par_len
         
         # should pass batch_size x seq_len vectors to transformers model. Hence reshape the x into 2D
-        word_level_outputs, pooled_output = self.word_level_encoder(
+        word_level_bert_output = self.word_level_encoder(
             input_ids = x.reshape(N*par_len,seq_len),
-            attention_mask = mask
+            attention_mask = mask.reshape(N*par_len,seq_len)
         )   # Output shape = (last layer outputs - N*par_len,seq_len, hidden_size; pooled_output - N*par_len,hidden_size)
 
+        word_level_outputs = word_level_bert_output.last_hidden_state
+        pooled_output = word_level_bert_output.pooler_output
+        # print('type(word_level_outputs)',type(word_level_outputs))
+        # print('word_level_outputs',word_level_outputs)
+        # print('type(pooled_output)',type(pooled_output))
+        # print('pooled_output',pooled_output)
+        # assert False
         # word_level_outputs = self.reshape_fc(word_level_outputs)
         word_level_outputs = word_level_outputs.reshape(N,par_len,word_level_outputs.shape[1],word_level_outputs.shape[2])
         pooled_output = pooled_output.reshape(N,par_len,-1)
@@ -91,7 +98,7 @@ class SentenceEncoder(nn.Module):
         #     self.word_embedding(label) for label in self.labels
         # ]
         label_embed = [
-            self.word_embedding(torch.tensor([self.words.index(label)]).to(self.device)) for label in self.labels
+            self.word_embedding(torch.Tensor([self.words.index(label)]).to(self.device).long()) for label in self.labels
         ]
         # NOTE: Each entry in the above list should be 1,embed_size. If not adjust to this size
         label_embed = torch.cat(label_embed,dim=0)

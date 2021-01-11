@@ -6,12 +6,14 @@ from torch.utils.data import DataLoader
 from src.dataset import load_data, tokenize_and_pad, return_dataloader
 from transformers import AutoTokenizer
 from src.transformer import Transformer
+import os
+from sklearn.metrics import f1_score
 
 LABEL_LIST = ['background','objective','methods','results','conclusions']
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--batch_size", type=int, default=16)    ## debug: increase later
+    parser.add_argument("--batch_size", type=int, default=8)    ## debug: increase later
     parser.add_argument('--num_epochs',type=int,default=200)
     parser.add_argument('--lr',type=float,default=1e-3)
     # parser.add_argument('--momentum',type=float,default=0.9)
@@ -23,7 +25,7 @@ def get_args():
     parser.add_argument('--embedding_path',type=str,default='data/glove.6B.100d.txt')
     parser.add_argument('--embed_size',type=int,default=100)
     parser.add_argument('--forward_expansion',type=int,default=4)
-    parser.add_argument('--num_layers',type=int,default=1)
+    parser.add_argument('--num_layers',type=int,default=6)
     parser.add_argument('--device',type=str,default='cuda')
     parser.add_argument('--save_model',type=bool,default=True)
     parser.add_argument('--save_path',type=str,default='models/')
@@ -68,6 +70,7 @@ def train(args):
         "drop_last": False
         }
 
+    print('train.py train_x.shape:',train_x.shape,'train_labels.shape',train_labels.shape)
     training_generator = return_dataloader(inputs=train_x, labels=train_labels, params=training_params)
     dev_generator = return_dataloader(inputs=dev_x, labels=dev_labels, params=dev_params)
     test_generator = return_dataloader(inputs=test_x, labels=test_labels, params=test_params)   
@@ -89,7 +92,7 @@ def train(args):
         max_seq_len=args.max_seq_len,
         embed_path=args.embedding_path
     )
-    model = model.to(device).double()
+    model = model.to(device).float()
     
     criterion = nn.CrossEntropyLoss(ignore_index=trg_pad_idx)
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=args.lr)
@@ -118,7 +121,8 @@ def train(args):
             target = target.to(device)
             # assert False
 
-            output = model(inp_data,target[:,:-1])
+            output = model(inp_data.long(),target[:,:-1])
+            # output = model(inp_data,target[:,:-1])
 
             # print('model net',make_dot(output))
             # print(make_dot(output))
