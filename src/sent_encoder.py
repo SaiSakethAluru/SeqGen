@@ -42,6 +42,7 @@ class SentenceEncoder(nn.Module):
             p.requires_grad = False
 
         ## Should we keep a fc layer to reshape the output layers?
+        
         self.reshape_fc = nn.Linear(768,embed_size)
         self.reshape_fc_pool = nn.Linear(768,embed_size)
 
@@ -108,12 +109,12 @@ class SentenceEncoder(nn.Module):
         # #     self.word_embedding(label) for label in self.labels
         # # ]
         label_embed = [
-            self.word_embedding(torch.Tensor([self.words.index(label)]).to(self.device).long()) for label in self.labels
+            self.word_embedding(torch.Tensor([self.labels.index(label)]).to(self.device).long()) for label in self.labels
         ]
         # # NOTE: Each entry in the above list should be 1,embed_size. If not adjust to this size
         label_embed = torch.cat(label_embed,dim=0)
         # # label_embed = torch.stack(label_embed,dim=0)
-        # label_embed = label_embed.repeat(N,1,1)
+        label_embed = label_embed.repeat(N,1,1)
         # # print("sent label_embed.shape",label_embed.shape)
         # # mask = mask.permute(1,0,2)
         # # mask - N,par_len,seq_len

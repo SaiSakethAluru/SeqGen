@@ -16,7 +16,7 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--batch_size", type=int, default=32)    ## debug: increase later
     parser.add_argument('--num_epochs',type=int,default=50)
-    parser.add_argument('--lr',type=float,default=1e-2)
+    parser.add_argument('--lr',type=float,default=1e-3)
     # parser.add_argument('--momentum',type=float,default=0.9)
     parser.add_argument('--max_par_len',type=int,default=20)    ## debug: 
     parser.add_argument('--max_seq_len',type=int,default=50)    ## debug:
@@ -24,9 +24,9 @@ def get_args():
     parser.add_argument('--dev_data',type=str,default='data/nicta_piboso/dev_clean.txt')
     parser.add_argument('--test_data',type=str,default='data/nicta_piboso/test_clean.txt')
     parser.add_argument('--embedding_path',type=str,default='data/glove.6B.100d.txt')
-    parser.add_argument('--embed_size',type=int,default=100)
+    parser.add_argument('--embed_size',type=int,default=720)
     parser.add_argument('--forward_expansion',type=int,default=4)
-    parser.add_argument('--num_layers',type=int,default=6)
+    parser.add_argument('--num_layers',type=int,default=3)
     parser.add_argument('--device',type=str,default='cuda')
     parser.add_argument('--save_model',type=bool,default=False)
     parser.add_argument('--save_path',type=str,default='models/')
@@ -89,7 +89,7 @@ def train(args):
         embed_size=args.embed_size,
         num_layers=args.num_layers,   ## debug
         forward_expansion=args.forward_expansion,
-        heads=4,
+        heads=len(LABEL_LIST),
         dropout=0.1,
         device=device,
         max_par_len=args.max_par_len,
@@ -130,7 +130,13 @@ def train(args):
             target = target.to(device)
             # assert False
 
-            output = model(inp_data.long(),target[:,:-1])       ## N,par_len, label_size
+            ## For generation
+            # output = model(inp_data.long(),target[:,:-1], training=True)       ## N,par_len, label_size
+            
+            ## For CRF
+            output = model(inp_data.long(),target[:,1:], training=True)       ## N,par_len, label_size
+
+
             # output = model(inp_data,target[:,:-1])
 
             # print('model net',make_dot(output))
@@ -183,7 +189,7 @@ def train(args):
             inp_data = inp_data.to(device)
             target = target.to(device)
             with torch.no_grad():
-                output = model(inp_data,target[:,:-1])
+                output = model(inp_data,target[:,:-1], training=False)
                 reshaped_output = output.reshape(-1,output.shape[2])
                 reshaped_target = target[:,1:].reshape(-1)
                 loss = criterion(reshaped_output,reshaped_target).item()
@@ -228,7 +234,7 @@ def train(args):
                 inp_data = inp_data.to(device)
                 target = target.to(device)
                 with torch.no_grad():
-                    output = model(inp_data,target[:,:-1])
+                    output = model(inp_data,target[:,:-1],training=False)
                 output = torch.softmax(output,dim=-1).argmax(dim=-1)
                 flattened_target = target[:,1:].to('cpu').flatten()
                 flattened_preds = output.to('cpu').flatten()

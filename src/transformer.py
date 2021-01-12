@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from src.sent_encoder import SentenceEncoder
 from src.decoder import Decoder
+# from torchcrf import CRF
 
 class Transformer(nn.Module):
     def __init__(
@@ -56,6 +57,7 @@ class Transformer(nn.Module):
         #     max_seq_len,
         #     embed_path
         self.fc_out = nn.Linear(embed_size,len(label_list)+2)
+        # self.crf = CRF(len(label_list)+2, batch_first = True)
         self.src_pad_idx = src_pad_idx
         self.trg_pad_idx = trg_pad_idx
         self.device = device
@@ -78,7 +80,7 @@ class Transformer(nn.Module):
         )
         return trg_mask.to(self.device)
 
-    def forward(self,src,trg):
+    def forward(self,src,trg, training):
         # print('transformer src.shape',src.shape)
         # src --> N, par_len, seq_len -> 2,3,10
         # print('transformer trg.shape',trg.shape)
@@ -90,10 +92,17 @@ class Transformer(nn.Module):
         # print('transformer src_mask.shape',src_mask.shape)
         # print('transformer trg_mask.shape',trg_mask.shape)
 
-        # enc_out,enc_word_out = self.encoder(src,src_mask)
+        # enc_out,enc_word_out = self.encoder(src,src_mask) 
         enc_out = self.encoder(src,src_mask)
         
         out = self.fc_out(enc_out)
+
+        # if training:
+        #     crf_out = self.crf(out, trg)
+
+        # else:
+        #     crf_out = self.crf.decode(out)
+    
         return out
 
         # # enc_out --> N,par_len,embed_size -> 2,3,8
