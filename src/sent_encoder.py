@@ -60,19 +60,19 @@ class SentenceEncoder(nn.Module):
         # embeds = torch.from_numpy(np.concatenate([pad_word,unknown_word,embeds], axis=0).astype(np.float))
 
         # self.word_embedding = nn.Embedding(src_vocab_size,embed_size).from_pretrained(embeds)   # Needed to get the label embeddings
-        # self.position_embedding = nn.Embedding(max_par_len,embed_size)
-        # self.layers = nn.ModuleList(
-        #     [
-        #         EncoderTransformerBlock(
-        #              embed_size, heads, dropout, forward_expansion, label_list
-        #         )
-        #         for _ in range(num_layers)
-        #     ]
-        # )
-        # self.dropout = nn.Dropout(dropout)
+        self.position_embedding = nn.Embedding(max_par_len,embed_size)
+        self.layers = nn.ModuleList(
+            [
+                EncoderTransformerBlock(
+                     embed_size, heads, dropout, forward_expansion, label_list
+                )
+                for _ in range(num_layers)
+            ]
+        )
+        self.dropout = nn.Dropout(dropout)
     def forward(self,x,mask):
         N,par_len,seq_len = x.shape
-        # positions = torch.arange(0,par_len).expand(N,par_len).to(self.device)   #position - N,par_len
+        positions = torch.arange(0,par_len).expand(N,par_len).to(self.device)   #position - N,par_len
         
         # should pass batch_size x seq_len vectors to transformers model. Hence reshape the x into 2D
         word_level_bert_output = self.word_level_encoder(
@@ -95,12 +95,12 @@ class SentenceEncoder(nn.Module):
         word_level_outputs = self.reshape_fc(word_level_outputs)    # word_level_outputs -> N,par_len,seq_len,embed_size
         pooled_output = self.reshape_fc_pool(pooled_output)         # pooled_output -> N,par_len,embed_size
 
-        return pooled_output
+        # return pooled_output
 
         # # print("sent word_level_outputs.shape",word_level_outputs.shape)
-        # out = self.dropout(
-        #     (pooled_output + self.position_embedding(positions))
-        # )
+        out = self.dropout(
+            (pooled_output + self.position_embedding(positions))
+        )
         # # print("sent out.shape",out.shape)
         # # label_embed = [
         # #     self.word_embedding(label) for label in self.labels
@@ -115,14 +115,18 @@ class SentenceEncoder(nn.Module):
         # # print("sent label_embed.shape",label_embed.shape)
         # # mask = mask.permute(1,0,2)
         # # mask - N,par_len,seq_len
-        # mask = torch.any(mask.bool(),dim=2).int()
+        mask = torch.any(mask.bool(),dim=2).int()
         # # mask - N,par_len --> mask now tells only if a sentence is padded one or not.
-        # for layer in self.layers:
-        #     out = layer(out,out,out,label_embed,mask)
+
+        label_embed = None
+        for layer in self.layers:
+            out = layer(out,out,out,label_embed,mask)
         # # print('sent out.shape',out.shape)
         # # out - N,par_len,embed_size
         # # word_level_output - N,par_len, seq_len, embed_size - Basically for each element in the batch, 
         # # for each sentence in the abstract, we have a embed_size vector for each word
         # return out, word_level_outputs
+        
+        return out
 
 

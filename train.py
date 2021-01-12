@@ -89,8 +89,8 @@ def train(args):
         embed_size=args.embed_size,
         num_layers=args.num_layers,   ## debug
         forward_expansion=args.forward_expansion,
-        heads=8,
-        dropout=0.5,
+        heads=4,
+        dropout=0.1,
         device=device,
         max_par_len=args.max_par_len,
         max_seq_len=args.max_seq_len,
@@ -199,7 +199,7 @@ def train(args):
         # val_targets = torch.cat(val_targets,dim=0)
         # val_preds = torch.cat(val_preds,dim=0)
         f1 = f1_score(val_targets,val_preds,average='micro')
-        print(f'------Macro F1 score on dev set: {f1}------')
+        print(f'------Micro F1 score on dev set: {f1}------')
         if loss < best_val_loss:
             print(f"val loss less than previous best val loss of {best_val_loss}")
             best_val_loss = loss
@@ -237,7 +237,7 @@ def train(args):
             # test_preds = torch.cat(test_preds,dim=0)
             # f1 = f1_score(target[:,1:].to('cpu').flatten(),output.to('cpu').flatten(),average='macro')
             f1 = f1_score(test_targets,test_preds,average='micro')
-            print(f"------Macro F1 score on test set: {f1}------")
+            print(f"------Micro F1 score on test set: {f1}------")
 
 
 

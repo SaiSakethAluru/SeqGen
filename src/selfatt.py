@@ -7,8 +7,9 @@ class SelfAttention(nn.Module):
         super(SelfAttention, self).__init__()
         self.embed_size = embed_size
         self.heads = heads
-        # self.head_dim = embed_size // heads
-        self.head_dim = embed_size
+
+        self.head_dim = embed_size // heads
+        # self.head_dim = embed_size
 
         # assert (
         #     self.head_dim * heads == embed_size
@@ -31,14 +32,16 @@ class SelfAttention(nn.Module):
 
         # Split the embedding into self.heads different pieces
 
-        # values = values.reshape(N, value_len, self.heads, self.head_dim)
-        # keys = keys.reshape(N, key_len, self.heads, self.head_dim)
-        # query = query.reshape(N, query_len, self.heads, self.head_dim)
+        values = values.reshape(N, value_len, self.heads, self.head_dim)
+        keys = keys.reshape(N, key_len, self.heads, self.head_dim)
+        query = query.reshape(N, query_len, self.heads, self.head_dim)
+        
         ## Instead of dividing into parts for each head, we repeat the same thing. 
         ## DOUBT: Is this needed though?
-        values = values.unsqueeze(2).expand(N,value_len,self.heads,self.head_dim)
-        keys = keys.unsqueeze(2).expand(N,key_len,self.heads,self.head_dim)
-        query = query.unsqueeze(2).expand(N,query_len,self.heads,self.head_dim)
+
+        # values = values.unsqueeze(2).expand(N,value_len,self.heads,self.head_dim)
+        # keys = keys.unsqueeze(2).expand(N,key_len,self.heads,self.head_dim)
+        # query = query.unsqueeze(2).expand(N,query_len,self.heads,self.head_dim)
 
         values = self.values(values)  # (N, value_len, heads, head_dim)
         keys = self.keys(keys)  # (N, key_len, heads, head_dim)

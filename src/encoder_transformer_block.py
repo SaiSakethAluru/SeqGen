@@ -11,8 +11,8 @@ class EncoderTransformerBlock(nn.Module):
 
         self.attention = SelfAttention(embed_size, heads)
         self.norm1 = nn.LayerNorm(embed_size)
-        self.label_attention = SelfAttention(embed_size, label_heads)
-        self.label_norm = nn.LayerNorm(embed_size)
+        # self.label_attention = SelfAttention(embed_size, label_heads)
+        # self.label_norm = nn.LayerNorm(embed_size)
         self.norm2 = nn.LayerNorm(embed_size)
         self.feed_forward = nn.Sequential(
             nn.Linear(embed_size, forward_expansion * embed_size),
@@ -37,14 +37,11 @@ class EncoderTransformerBlock(nn.Module):
         # Add skip connection, run through normalization and finally dropout
         # x - N,seq_len, embed_size
         x = self.dropout(self.norm1(attention + query))
+
+        ### x = self.label_attention(label_embed, label_embed, x, mask.permute(0, 1, 3, 2))
         # print('etb x.shape', x.shape)
         # x - N,seq_len, embed_size
-        # x = self.label_attention(x,label_embed,label_embed,mask)
-        x = self.label_attention(label_embed, label_embed, x, mask.permute(0, 1, 3, 2))
-        # x = self.label_attention(label_embed,x,x,mask)
-        # print('etb x.shape', x.shape)
-        # x - N,seq_len, embed_size
-        x = self.dropout(self.label_norm(x))
+        # x = self.dropout(self.label_norm(x))
         # print('etb x.shape', x.shape)
         # x - N,seq_len, embed_size
         forward = self.feed_forward(x)
@@ -54,3 +51,4 @@ class EncoderTransformerBlock(nn.Module):
         # print('etb out.shape', out.shape)
         # out - N,seq_len,embed_size
         return out
+
