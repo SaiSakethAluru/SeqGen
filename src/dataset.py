@@ -7,6 +7,19 @@ from nltk.tokenize import sent_tokenize
 # LABEL_LIST = ['background','objective','methods','results','conclusions']   ## 0 - <pad>, 1 - <sos>, 2 - <background> and so on 
 # LABEL_LIST = ['background','intervention','study','population','outcome','other']   ## nicta_piboso
 
+
+LABEL_ENCODE = None
+
+def get_label_encodes(tokenizer, label_list):
+    token_ids = []
+    sep_token = 102
+    for label in label_list:
+        label_ids = tokenizer.encode(label)
+        token_ids.extend(label_ids)
+        token_ids.append(sep_token)
+    return token_ids
+
+
 def load_data(data_path, max_par_len, label_list):
     texts, labels = [], []
     abstract = ""
@@ -32,8 +45,12 @@ def load_data(data_path, max_par_len, label_list):
     # labels = labels[:30]
     return texts, torch.Tensor(labels).long()
 
-def tokenize(paragraphs, tokenizer, max_par_len, max_seq_len):
+
+
+def tokenize(paragraphs, tokenizer, max_par_len, max_seq_len, label_list):
     input_ids = []
+    if LABEL_ENCODE is None:
+        LABEL_ENCODE = get_label_encodes(tokenizer,label_list)
     for para in paragraphs:
         sentences = sent_tokenize(para)
         para_ids = []
@@ -42,14 +59,16 @@ def tokenize(paragraphs, tokenizer, max_par_len, max_seq_len):
                 encoded_sent = tokenizer.encode(
                     sent,
                     add_special_tokens = True,
-                    max_length = max_seq_len
+                    max_length = max_seq_len - len(LABEL_ENCODE)
                 )
             except ValueError: 
                 encoded_sent = tokenizer.encode(
                     '',
                     add_special_tokens = True,
-                    max_length = max_seq_len
+                    max_length = max_seq_len - len(LABEL_ENCODE)
                 )
+            
+            encoded_sent.extend(LABEL_ENCODE)
             if(len(encoded_sent) < max_seq_len):
                 pad_words = [0 for _ in range(max_seq_len - len(encoded_sent))]
                 encoded_sent.extend(pad_words)
@@ -59,6 +78,7 @@ def tokenize(paragraphs, tokenizer, max_par_len, max_seq_len):
             para_ids.extend(pad_sentences)
         input_ids.append(para_ids[:max_par_len])
     return input_ids        ## Will be a list of len N. Each entry para_len x seq_len list.
+
 
 
 def tokenize_and_pad(paragraphs, tokenizer, max_par_len, max_seq_len):

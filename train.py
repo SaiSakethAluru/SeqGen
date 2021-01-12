@@ -19,7 +19,7 @@ def get_args():
     parser.add_argument('--lr',type=float,default=1e-3)
     # parser.add_argument('--momentum',type=float,default=0.9)
     parser.add_argument('--max_par_len',type=int,default=20)    ## debug: 
-    parser.add_argument('--max_seq_len',type=int,default=50)    ## debug:
+    parser.add_argument('--max_seq_len',type=int,default=128)    ## debug:
     parser.add_argument('--train_data',type=str,default='data/nicta_piboso/train_clean.txt')
     parser.add_argument('--dev_data',type=str,default='data/nicta_piboso/dev_clean.txt')
     parser.add_argument('--test_data',type=str,default='data/nicta_piboso/test_clean.txt')
@@ -51,9 +51,9 @@ def train(args):
     test_x,test_labels = load_data(args.test_data, args.max_par_len,LABEL_LIST)
 
     tokenizer = AutoTokenizer.from_pretrained("allenai/scibert_scivocab_uncased")
-    train_x = tokenize_and_pad(train_x,tokenizer,args.max_par_len,args.max_seq_len)  ## N, par_len, seq_len
-    dev_x = tokenize_and_pad(dev_x,tokenizer,args.max_par_len, args.max_seq_len)
-    test_x = tokenize_and_pad(test_x,tokenizer, args.max_par_len, args.max_seq_len)
+    train_x = tokenize_and_pad(train_x,tokenizer,args.max_par_len,args.max_seq_len, LABEL_LIST)  ## N, par_len, seq_len
+    dev_x = tokenize_and_pad(dev_x,tokenizer,args.max_par_len, args.max_seq_len, LABEL_LIST)
+    test_x = tokenize_and_pad(test_x,tokenizer, args.max_par_len, args.max_seq_len, LABEL_LIST)
 
     # print('train_x[0]',train_x[0])
     # print('train_x[0].shape',train_x[0].shape)
