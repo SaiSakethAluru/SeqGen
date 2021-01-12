@@ -37,6 +37,10 @@ class SentenceEncoder(nn.Module):
         #     embed_path
         # )
         self.word_level_encoder = AutoModel.from_pretrained("allenai/scibert_scivocab_uncased")
+
+        for p in self.word_level_encoder.parameters():
+            p.requires_grad = False
+
         ## Should we keep a fc layer to reshape the output layers?
         self.reshape_fc = nn.Linear(768,embed_size)
         self.reshape_fc_pool = nn.Linear(768,embed_size)

@@ -15,7 +15,7 @@ LABEL_LIST = ['background','intervention','study design','population','outcome',
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--batch_size", type=int, default=8)    ## debug: increase later
-    parser.add_argument('--num_epochs',type=int,default=200)
+    parser.add_argument('--num_epochs',type=int,default=20)
     parser.add_argument('--lr',type=float,default=1e-3)
     # parser.add_argument('--momentum',type=float,default=0.9)
     parser.add_argument('--max_par_len',type=int,default=20)    ## debug: 
@@ -198,7 +198,7 @@ def train(args):
         print(f"Validation loss at epoch {epoch} is {loss}")
         # val_targets = torch.cat(val_targets,dim=0)
         # val_preds = torch.cat(val_preds,dim=0)
-        f1 = f1_score(val_targets,val_preds,average='macro')
+        f1 = f1_score(val_targets,val_preds,average='micro')
         print(f'------Macro F1 score on dev set: {f1}------')
         if loss < best_val_loss:
             print(f"val loss less than previous best val loss of {best_val_loss}")
@@ -236,7 +236,7 @@ def train(args):
             # test_targets = torch.cat(test_targets,dim=0)
             # test_preds = torch.cat(test_preds,dim=0)
             # f1 = f1_score(target[:,1:].to('cpu').flatten(),output.to('cpu').flatten(),average='macro')
-            f1 = f1_score(test_targets,test_preds,average='macro')
+            f1 = f1_score(test_targets,test_preds,average='micro')
             print(f"------Macro F1 score on test set: {f1}------")
 
 

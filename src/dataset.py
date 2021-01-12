@@ -11,7 +11,7 @@ def load_data(data_path, max_par_len, label_list):
     texts, labels = [], []
     abstract = ""
     abs_labels = [1]    ## Initial sos token 
-    with open(data_path) as data_file:
+    with open(data_path, encoding='utf-8') as data_file:
         data_file_lines = data_file.readlines()
         data_file_lines = list(filter(None,[line.rstrip() for line in data_file_lines]))
         for line in data_file_lines[1:]:  # ignore first line which is ID
