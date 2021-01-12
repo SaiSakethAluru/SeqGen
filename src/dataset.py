@@ -81,8 +81,8 @@ def tokenize(paragraphs, tokenizer, max_par_len, max_seq_len, label_list):
 
 
 
-def tokenize_and_pad(paragraphs, tokenizer, max_par_len, max_seq_len):
-    input_ids = tokenize(paragraphs,tokenizer,max_par_len,max_seq_len)
+def tokenize_and_pad(paragraphs, tokenizer, max_par_len, max_seq_len, label_list):
+    input_ids = tokenize(paragraphs,tokenizer,max_par_len,max_seq_len, label_list)
     # input_ids = pad_sequence(input_ids,batch_first=True)
     input_ids = torch.Tensor(input_ids).long()
     input_ids = input_ids[:,:max_par_len, :max_seq_len]        ## Hopefully not required
