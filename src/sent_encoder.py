@@ -43,8 +43,11 @@ class SentenceEncoder(nn.Module):
 
         ## Should we keep a fc layer to reshape the output layers?
         
-        self.reshape_fc = nn.Linear(768,embed_size)
-        self.reshape_fc_pool = nn.Linear(768,embed_size)
+        self.reshape_fc1 = nn.Linear(768,3*embed_size)
+        self.reshape_fc_pool1 = nn.Linear(768,3*embed_size)
+
+        self.reshape_fc2 = nn.Linear(3*embed_size, embed_size)
+        self.reshape_fc_pool2 = nn.Linear(3*embed_size, embed_size)
 
         # ## TODO: Make this pretrained from glove
         # word_embeds = pd.read_csv(filepath_or_buffer=embed_path,header=None,sep=' ',quoting=csv.QUOTE_NONE).values
@@ -95,9 +98,11 @@ class SentenceEncoder(nn.Module):
         pooled_output = pooled_output.reshape(N,par_len,-1)
 
 
-        word_level_outputs = self.reshape_fc(word_level_outputs)    # word_level_outputs -> N,par_len,seq_len,embed_size
-        pooled_output = self.reshape_fc_pool(pooled_output)         # pooled_output -> N,par_len,embed_size
+        word_level_outputs = self.reshape_fc1(word_level_outputs)    # word_level_outputs -> N,par_len,seq_len,3*embed_size
+        pooled_output = self.reshape_fc_pool1(pooled_output)         # pooled_output -> N,par_len,3*embed_size
 
+        word_level_outputs = self.reshape_fc2(word_level_outputs)    # word_level_outputs -> N,par_len,seq_len,embed_size
+        pooled_output = self.reshape_fc_pool2(pooled_output)        # pooled_output -> N,par_len,embed_size
         # return pooled_output
 
         # # print("sent word_level_outputs.shape",word_level_outputs.shape)

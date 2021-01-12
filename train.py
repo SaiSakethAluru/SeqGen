@@ -24,7 +24,7 @@ def get_args():
     parser.add_argument('--dev_data',type=str,default='data/nicta_piboso/dev_clean.txt')
     parser.add_argument('--test_data',type=str,default='data/nicta_piboso/test_clean.txt')
     parser.add_argument('--embedding_path',type=str,default='data/glove.6B.100d.txt')
-    parser.add_argument('--embed_size',type=int,default=720)
+    parser.add_argument('--embed_size',type=int,default=120)
     parser.add_argument('--forward_expansion',type=int,default=4)
     parser.add_argument('--num_layers',type=int,default=3)
     parser.add_argument('--device',type=str,default='cuda')
