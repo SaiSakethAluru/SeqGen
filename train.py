@@ -28,7 +28,7 @@ def get_args():
     parser.add_argument('--forward_expansion',type=int,default=4)
     parser.add_argument('--num_layers',type=int,default=6)
     parser.add_argument('--device',type=str,default='cuda')
-    parser.add_argument('--save_model',type=bool,default=True)
+    parser.add_argument('--save_model',type=bool,default=False)
     parser.add_argument('--save_path',type=str,default='models/')
     parser.add_argument('--load_model',type=bool,default=False)
     parser.add_argument('--load_path',type=str,default='models/')
@@ -97,8 +97,11 @@ def train(args):
         embed_path=args.embedding_path
     )
     model = model.to(device).float()
-    for param in model.parameters():
-        torch.nn.init.xavier_uniform(param)
+    # for param in model.parameters():
+    #     try:
+    #         torch.nn.init.xavier_uniform_(param)
+    #     except:
+    #         continue
     
     criterion = nn.CrossEntropyLoss(ignore_index=trg_pad_idx)
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=args.lr)

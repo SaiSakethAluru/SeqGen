@@ -60,6 +60,9 @@ class SentenceEncoder(nn.Module):
         # embeds = torch.from_numpy(np.concatenate([pad_word,unknown_word,embeds], axis=0).astype(np.float))
 
         # self.word_embedding = nn.Embedding(src_vocab_size,embed_size).from_pretrained(embeds)   # Needed to get the label embeddings
+        
+        self.word_embedding = nn.Embedding(len(label_list),embed_size)
+
         self.position_embedding = nn.Embedding(max_par_len,embed_size)
         self.layers = nn.ModuleList(
             [
@@ -87,7 +90,6 @@ class SentenceEncoder(nn.Module):
         # print('type(pooled_output)',type(pooled_output))
         # print('pooled_output',pooled_output)
         # assert False
-        # word_level_outputs = self.reshape_fc(word_level_outputs)
         word_level_outputs = word_level_outputs.reshape(N,par_len,word_level_outputs.shape[1],word_level_outputs.shape[2])
         pooled_output = pooled_output.reshape(N,par_len,-1)
 
@@ -105,11 +107,11 @@ class SentenceEncoder(nn.Module):
         # # label_embed = [
         # #     self.word_embedding(label) for label in self.labels
         # # ]
-        # label_embed = [
-        #     self.word_embedding(torch.Tensor([self.words.index(label)]).to(self.device).long()) for label in self.labels
-        # ]
+        label_embed = [
+            self.word_embedding(torch.Tensor([self.words.index(label)]).to(self.device).long()) for label in self.labels
+        ]
         # # NOTE: Each entry in the above list should be 1,embed_size. If not adjust to this size
-        # label_embed = torch.cat(label_embed,dim=0)
+        label_embed = torch.cat(label_embed,dim=0)
         # # label_embed = torch.stack(label_embed,dim=0)
         # label_embed = label_embed.repeat(N,1,1)
         # # print("sent label_embed.shape",label_embed.shape)
@@ -118,7 +120,7 @@ class SentenceEncoder(nn.Module):
         mask = torch.any(mask.bool(),dim=2).int()
         # # mask - N,par_len --> mask now tells only if a sentence is padded one or not.
 
-        label_embed = None
+        # label_embed = None
         for layer in self.layers:
             out = layer(out,out,out,label_embed,mask)
         # # print('sent out.shape',out.shape)
