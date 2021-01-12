@@ -86,35 +86,38 @@ class SentenceEncoder(nn.Module):
         word_level_outputs = word_level_outputs.reshape(N,par_len,word_level_outputs.shape[1],word_level_outputs.shape[2])
         pooled_output = pooled_output.reshape(N,par_len,-1)
 
+
         word_level_outputs = self.reshape_fc(word_level_outputs)    # word_level_outputs -> N,par_len,seq_len,embed_size
         pooled_output = self.reshape_fc_pool(pooled_output)         # pooled_output -> N,par_len,embed_size
 
-        # print("sent word_level_outputs.shape",word_level_outputs.shape)
-        out = self.dropout(
-            (pooled_output + self.position_embedding(positions))
-        )
-        # print("sent out.shape",out.shape)
+        return pooled_output
+
+        # # print("sent word_level_outputs.shape",word_level_outputs.shape)
+        # out = self.dropout(
+        #     (pooled_output + self.position_embedding(positions))
+        # )
+        # # print("sent out.shape",out.shape)
+        # # label_embed = [
+        # #     self.word_embedding(label) for label in self.labels
+        # # ]
         # label_embed = [
-        #     self.word_embedding(label) for label in self.labels
+        #     self.word_embedding(torch.Tensor([self.words.index(label)]).to(self.device).long()) for label in self.labels
         # ]
-        label_embed = [
-            self.word_embedding(torch.Tensor([self.words.index(label)]).to(self.device).long()) for label in self.labels
-        ]
-        # NOTE: Each entry in the above list should be 1,embed_size. If not adjust to this size
-        label_embed = torch.cat(label_embed,dim=0)
-        # label_embed = torch.stack(label_embed,dim=0)
-        label_embed = label_embed.repeat(N,1,1)
-        # print("sent label_embed.shape",label_embed.shape)
-        # mask = mask.permute(1,0,2)
-        # mask - N,par_len,seq_len
-        mask = torch.any(mask.bool(),dim=2).int()
-        # mask - N,par_len --> mask now tells only if a sentence is padded one or not.
-        for layer in self.layers:
-            out = layer(out,out,out,label_embed,mask)
-        # print('sent out.shape',out.shape)
-        # out - N,par_len,embed_size
-        # word_level_output - N,par_len, seq_len, embed_size - Basically for each element in the batch, 
-        # for each sentence in the abstract, we have a embed_size vector for each word
-        return out, word_level_outputs
+        # # NOTE: Each entry in the above list should be 1,embed_size. If not adjust to this size
+        # label_embed = torch.cat(label_embed,dim=0)
+        # # label_embed = torch.stack(label_embed,dim=0)
+        # label_embed = label_embed.repeat(N,1,1)
+        # # print("sent label_embed.shape",label_embed.shape)
+        # # mask = mask.permute(1,0,2)
+        # # mask - N,par_len,seq_len
+        # mask = torch.any(mask.bool(),dim=2).int()
+        # # mask - N,par_len --> mask now tells only if a sentence is padded one or not.
+        # for layer in self.layers:
+        #     out = layer(out,out,out,label_embed,mask)
+        # # print('sent out.shape',out.shape)
+        # # out - N,par_len,embed_size
+        # # word_level_output - N,par_len, seq_len, embed_size - Basically for each element in the batch, 
+        # # for each sentence in the abstract, we have a embed_size vector for each word
+        # return out, word_level_outputs
 
 

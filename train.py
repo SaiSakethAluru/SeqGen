@@ -50,10 +50,13 @@ def train(args):
     test_x,test_labels = load_data(args.test_data, args.max_par_len)
 
     tokenizer = AutoTokenizer.from_pretrained("dmis-lab/biobert-base-cased-v1.1")
-    train_x = tokenize_and_pad(train_x,tokenizer,args.max_par_len,args.max_seq_len)
+    train_x = tokenize_and_pad(train_x,tokenizer,args.max_par_len,args.max_seq_len)  ## N, par_len, seq_len
     dev_x = tokenize_and_pad(dev_x,tokenizer,args.max_par_len, args.max_seq_len)
     test_x = tokenize_and_pad(test_x,tokenizer, args.max_par_len, args.max_seq_len)
 
+    # print('train_x[0]',train_x[0])
+    # print('train_x[0].shape',train_x[0].shape)
+    # quit()
     training_params = {
         "batch_size": args.batch_size,
         "shuffle": True,
@@ -121,7 +124,7 @@ def train(args):
             target = target.to(device)
             # assert False
 
-            output = model(inp_data.long(),target[:,:-1])
+            output = model(inp_data.long(),target[:,:-1])       ## N,par_len, label_size
             # output = model(inp_data,target[:,:-1])
 
             # print('model net',make_dot(output))
@@ -131,7 +134,7 @@ def train(args):
             # assert False
             ## output - N,par_len, num_labels --> N*par_len, num_labels
             output = output.reshape(-1,output.shape[2])
-            ## target - 
+            ## target -
             target = target[:,1:].reshape(-1)
 
             # print('output.shape',output.shape)
@@ -155,7 +158,7 @@ def train(args):
             #         print(p.grad,p.grad.norm())
             #         count +=1 
             # print(f'non none grads are {count}')
-            torch.nn.utils.clip_grad_norm_(model.parameters(),max_norm=1)
+            # torch.nn.utils.clip_grad_norm_(model.parameters(),max_norm=1)
 
             optimizer.step()
             # break #NOTE: break is there only for quick checking. Remove this for actual training.

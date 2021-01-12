@@ -89,11 +89,13 @@ class Transformer(nn.Module):
         # trg_mask --> N, 1, par_len, par_len -> 2,1,3,3
         # print('transformer src_mask.shape',src_mask.shape)
         # print('transformer trg_mask.shape',trg_mask.shape)
-        enc_out,enc_word_out = self.encoder(src,src_mask)
 
+        # enc_out,enc_word_out = self.encoder(src,src_mask)
+        enc_out = self.encoder(src,src_mask)
+        
         out = self.fc_out(enc_out)
         return out
-        
+
         # # enc_out --> N,par_len,embed_size -> 2,3,8
         # # enc_word_out --> N,par_len, seq_len, embed_size -> 2,3,10,8
         # # print("transformer enc_out.shape",enc_out.shape)
