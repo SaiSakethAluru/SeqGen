@@ -14,9 +14,9 @@ LABEL_LIST = ['background','intervention','study design','population','outcome',
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--batch_size", type=int, default=8)    ## debug: increase later
+    parser.add_argument("--batch_size", type=int, default=32)    ## debug: increase later
     parser.add_argument('--num_epochs',type=int,default=50)
-    parser.add_argument('--lr',type=float,default=1e-3)
+    parser.add_argument('--lr',type=float,default=1e-2)
     # parser.add_argument('--momentum',type=float,default=0.9)
     parser.add_argument('--max_par_len',type=int,default=20)    ## debug: 
     parser.add_argument('--max_seq_len',type=int,default=50)    ## debug:
@@ -204,7 +204,9 @@ def train(args):
         # val_targets = torch.cat(val_targets,dim=0)
         # val_preds = torch.cat(val_preds,dim=0)
         f1 = f1_score(val_targets,val_preds,average='micro')
-        print(f'------Micro F1 score on dev set: {f1}------')
+        
+        # print(f'------Micro F1 score on dev set: {f1}------')
+
         if loss < best_val_loss:
             print(f"val loss less than previous best val loss of {best_val_loss}")
             best_val_loss = loss
