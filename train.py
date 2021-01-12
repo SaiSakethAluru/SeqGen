@@ -9,7 +9,8 @@ from src.transformer import Transformer
 import os
 from sklearn.metrics import f1_score
 
-LABEL_LIST = ['background','objective','methods','results','conclusions']
+# LABEL_LIST = ['background','objective','methods','results','conclusions']   #pubmed
+LABEL_LIST = ['background','intervention','study','population','outcome','other']
 
 def get_args():
     parser = argparse.ArgumentParser()
