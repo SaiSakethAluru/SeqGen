@@ -15,7 +15,7 @@ LABEL_LIST = ['background','intervention','study design','population','outcome',
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--batch_size", type=int, default=8)    ## debug: increase later
-    parser.add_argument('--num_epochs',type=int,default=20)
+    parser.add_argument('--num_epochs',type=int,default=50)
     parser.add_argument('--lr',type=float,default=1e-3)
     # parser.add_argument('--momentum',type=float,default=0.9)
     parser.add_argument('--max_par_len',type=int,default=20)    ## debug: 
@@ -97,6 +97,8 @@ def train(args):
         embed_path=args.embedding_path
     )
     model = model.to(device).float()
+    for param in model.parameters():
+        torch.nn.init.xavier_uniform(param)
     
     criterion = nn.CrossEntropyLoss(ignore_index=trg_pad_idx)
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=args.lr)
