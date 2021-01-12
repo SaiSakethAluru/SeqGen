@@ -49,6 +49,7 @@ def load_data(data_path, max_par_len, label_list):
 
 def tokenize(paragraphs, tokenizer, max_par_len, max_seq_len, label_list):
     input_ids = []
+    global LABEL_ENCODE
     if LABEL_ENCODE is None:
         LABEL_ENCODE = get_label_encodes(tokenizer,label_list)
     for para in paragraphs:
