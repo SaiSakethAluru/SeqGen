@@ -35,39 +35,39 @@ class SentenceEncoder(nn.Module):
         #     max_seq_len,
         #     embed_path
         # )
-        self.word_level_encoder = AutoModel.from_pretrained("dmis-lab/biobert-base-cased-v1.1")
+        self.word_level_encoder = AutoModel.from_pretrained("allenai/scibert_scivocab_uncased")
         ## Should we keep a fc layer to reshape the output layers?
         self.reshape_fc = nn.Linear(768,embed_size)
         self.reshape_fc_pool = nn.Linear(768,embed_size)
 
-        ## TODO: Make this pretrained from glove
-        word_embeds = pd.read_csv(filepath_or_buffer=embed_path,header=None,sep=' ',quoting=csv.QUOTE_NONE).values
-        # embeds = pd.read_csv(filepath_or_buffer=embed_path,header=None,sep=' ',quoting=csv.QUOTE_NONE).values[:,1:]
-        embeds = word_embeds[:,1:]
-        words = word_embeds[:,:1]
-        self.words = [word[0] for word in words]
-        src_vocab_size,embed_size = embeds.shape
-        self.embed_size = embed_size
-        src_vocab_size += 2
-        unknown_word = np.zeros((1, embed_size))
-        pad_word = np.zeros((1,embed_size))
-        # sos_word = np.zeros((1,embed_size))
-        embeds = torch.from_numpy(np.concatenate([pad_word,unknown_word,embeds], axis=0).astype(np.float))
+        # ## TODO: Make this pretrained from glove
+        # word_embeds = pd.read_csv(filepath_or_buffer=embed_path,header=None,sep=' ',quoting=csv.QUOTE_NONE).values
+        # # embeds = pd.read_csv(filepath_or_buffer=embed_path,header=None,sep=' ',quoting=csv.QUOTE_NONE).values[:,1:]
+        # embeds = word_embeds[:,1:]
+        # words = word_embeds[:,:1]
+        # self.words = [word[0] for word in words]
+        # src_vocab_size,embed_size = embeds.shape
+        # self.embed_size = embed_size
+        # src_vocab_size += 2
+        # unknown_word = np.zeros((1, embed_size))
+        # pad_word = np.zeros((1,embed_size))
+        # # sos_word = np.zeros((1,embed_size))
+        # embeds = torch.from_numpy(np.concatenate([pad_word,unknown_word,embeds], axis=0).astype(np.float))
 
-        self.word_embedding = nn.Embedding(src_vocab_size,embed_size).from_pretrained(embeds)   # Needed to get the label embeddings
-        self.position_embedding = nn.Embedding(max_par_len,embed_size)
-        self.layers = nn.ModuleList(
-            [
-                EncoderTransformerBlock(
-                     embed_size, heads, dropout, forward_expansion, label_list
-                )
-                for _ in range(num_layers)
-            ]
-        )
-        self.dropout = nn.Dropout(dropout)
+        # self.word_embedding = nn.Embedding(src_vocab_size,embed_size).from_pretrained(embeds)   # Needed to get the label embeddings
+        # self.position_embedding = nn.Embedding(max_par_len,embed_size)
+        # self.layers = nn.ModuleList(
+        #     [
+        #         EncoderTransformerBlock(
+        #              embed_size, heads, dropout, forward_expansion, label_list
+        #         )
+        #         for _ in range(num_layers)
+        #     ]
+        # )
+        # self.dropout = nn.Dropout(dropout)
     def forward(self,x,mask):
         N,par_len,seq_len = x.shape
-        positions = torch.arange(0,par_len).expand(N,par_len).to(self.device)   #position - N,par_len
+        # positions = torch.arange(0,par_len).expand(N,par_len).to(self.device)   #position - N,par_len
         
         # should pass batch_size x seq_len vectors to transformers model. Hence reshape the x into 2D
         word_level_bert_output = self.word_level_encoder(

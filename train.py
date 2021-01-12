@@ -20,9 +20,9 @@ def get_args():
     # parser.add_argument('--momentum',type=float,default=0.9)
     parser.add_argument('--max_par_len',type=int,default=20)    ## debug: 
     parser.add_argument('--max_seq_len',type=int,default=50)    ## debug:
-    parser.add_argument('--train_data',type=str,default='data/train.txt')
-    parser.add_argument('--dev_data',type=str,default='data/dev.txt')
-    parser.add_argument('--test_data',type=str,default='data/test.txt')
+    parser.add_argument('--train_data',type=str,default='data/nicta_piboso/train_clean.txt')
+    parser.add_argument('--dev_data',type=str,default='data/nicta_piboso/dev_clean.txt')
+    parser.add_argument('--test_data',type=str,default='data/nicta_piboso/test_clean.txt')
     parser.add_argument('--embedding_path',type=str,default='data/glove.6B.100d.txt')
     parser.add_argument('--embed_size',type=int,default=100)
     parser.add_argument('--forward_expansion',type=int,default=4)
@@ -50,7 +50,7 @@ def train(args):
     dev_x,dev_labels = load_data(args.dev_data, args.max_par_len)
     test_x,test_labels = load_data(args.test_data, args.max_par_len)
 
-    tokenizer = AutoTokenizer.from_pretrained("dmis-lab/biobert-base-cased-v1.1")
+    tokenizer = AutoTokenizer.from_pretrained("allenai/scibert_scivocab_uncased")
     train_x = tokenize_and_pad(train_x,tokenizer,args.max_par_len,args.max_seq_len)  ## N, par_len, seq_len
     dev_x = tokenize_and_pad(dev_x,tokenizer,args.max_par_len, args.max_seq_len)
     test_x = tokenize_and_pad(test_x,tokenizer, args.max_par_len, args.max_seq_len)
