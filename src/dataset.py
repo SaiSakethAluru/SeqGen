@@ -4,10 +4,10 @@ import torch
 from torch.utils.data import TensorDataset, DataLoader 
 from nltk.tokenize import sent_tokenize
 
-LABEL_LIST = ['background','objective','methods','results','conclusions']   ## 0 - <pad>, 1 - <sos>, 2 - <background> and so on 
+# LABEL_LIST = ['background','objective','methods','results','conclusions']   ## 0 - <pad>, 1 - <sos>, 2 - <background> and so on 
+# LABEL_LIST = ['background','intervention','study','population','outcome','other']   ## nicta_piboso
 
-
-def load_data(data_path, max_par_len):
+def load_data(data_path, max_par_len, label_list):
     texts, labels = [], []
     abstract = ""
     abs_labels = [1]    ## Initial sos token 
@@ -26,7 +26,7 @@ def load_data(data_path, max_par_len):
                 continue
             label, txt = line.split('\t', 1)
             abstract += txt.lower()+'\n'
-            abs_labels.append(LABEL_LIST.index(label.lower())+2)
+            abs_labels.append(label_list.index(label.lower())+2)
         
     # texts = texts[:30]
     # labels = labels[:30]

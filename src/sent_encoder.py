@@ -24,6 +24,7 @@ class SentenceEncoder(nn.Module):
         self.embed_size = embed_size
         self.device = device
         self.labels = label_list
+        print(label_list)
         # self.word_level_encoder = WordEncoder(
         #     label_list, 
         #     embed_size, 

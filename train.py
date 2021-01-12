@@ -10,7 +10,7 @@ import os
 from sklearn.metrics import f1_score
 
 # LABEL_LIST = ['background','objective','methods','results','conclusions']   #pubmed
-LABEL_LIST = ['background','intervention','study','population','outcome','other']
+LABEL_LIST = ['background','intervention','study design','population','outcome','other']
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -46,9 +46,9 @@ def train(args):
         device = torch.device('cpu')
         print('using cpu')
     
-    train_x,train_labels = load_data(args.train_data, args.max_par_len)
-    dev_x,dev_labels = load_data(args.dev_data, args.max_par_len)
-    test_x,test_labels = load_data(args.test_data, args.max_par_len)
+    train_x,train_labels = load_data(args.train_data, args.max_par_len,LABEL_LIST)
+    dev_x,dev_labels = load_data(args.dev_data, args.max_par_len,LABEL_LIST)
+    test_x,test_labels = load_data(args.test_data, args.max_par_len,LABEL_LIST)
 
     tokenizer = AutoTokenizer.from_pretrained("allenai/scibert_scivocab_uncased")
     train_x = tokenize_and_pad(train_x,tokenizer,args.max_par_len,args.max_seq_len)  ## N, par_len, seq_len
