@@ -134,7 +134,10 @@ def train(args):
             # output = model(inp_data.long(),target[:,:-1], training=True)       ## N,par_len, label_size
             
             ## For CRF
-            output = model(inp_data.long(),target[:,1:], training=True)       ## N,par_len, label_size
+            optimizer.zero_grad()
+
+            # output = model(inp_data.long(),target[:,1:], training=True)       ## N,par_len, label_size
+            loss = model(inp_data.long(),target[:,1:], training=True)       ## directly gives loss when training = True
 
 
             # output = model(inp_data,target[:,:-1])
@@ -145,18 +148,17 @@ def train(args):
             # Source(make_arch).render('graph.png')
             # assert False
             ## output - N,par_len, num_labels --> N*par_len, num_labels
-            output = output.reshape(-1,output.shape[2])
+            # output = output.reshape(-1,output.shape[2])
             ## target -
-            target = target[:,1:].reshape(-1)
+            # target = target[:,1:].reshape(-1)
 
             # print('output.shape',output.shape)
             # print('target.shape',target.shape)
             # print(f'{epoch} model params', list(model.parameters())[-1])
             # print('len params',len(list(model.parameters())))
             # print('trainable params: ',len(list(filter(lambda p: p.requires_grad, model.parameters()))))
-            optimizer.zero_grad()
 
-            loss = criterion(output,target)
+            # loss = criterion(output,target)
             # loss.retain_grad()
             losses.append(loss.item())
 
@@ -181,7 +183,7 @@ def train(args):
         print(f"Mean loss for epoch {epoch} is {mean_loss}")
         # Validation
         model.eval()
-        val_losses = []
+        # val_losses = []
         val_targets = []
         val_preds = []
         for batch_idx,batch in tqdm(enumerate(dev_generator)):
@@ -189,13 +191,15 @@ def train(args):
             inp_data = inp_data.to(device)
             target = target.to(device)
             with torch.no_grad():
-                output = model(inp_data,target[:,:-1], training=False)
-                reshaped_output = output.reshape(-1,output.shape[2])
-                reshaped_target = target[:,1:].reshape(-1)
-                loss = criterion(reshaped_output,reshaped_target).item()
-            val_losses.append(loss)
+                output = model(inp_data,target[:,:-1], training=False)      ## directly we get the labels here, instead of logits
+                # reshaped_output = output.reshape(-1,output.shape[2])
+                # reshaped_target = target[:,1:].reshape(-1)
+                # loss = criterion(reshaped_output,reshaped_target).item()
+
+            # val_losses.append(loss)
             flattened_target = target[:,1:].to('cpu').flatten()
-            flattened_preds = torch.softmax(output,dim=-1).argmax(dim=-1).to('cpu').flatten()
+            # flattened_preds = torch.softmax(output,dim=-1).argmax(dim=-1).to('cpu').flatten()
+            flattened_preds = output.to('cpu').flatten()
             for target_i,pred_i in zip(flattened_target,flattened_preds):
                 if target_i != 0:
                     val_targets.append(target_i)
@@ -205,24 +209,24 @@ def train(args):
             # val_preds.append(output.to('cpu').flatten())
             # break #NOTE: break is there only for quick checking. Remove this for actual training.
 
-        loss = sum(val_losses) / len(val_losses)
-        print(f"Validation loss at epoch {epoch} is {loss}")
+        # loss = sum(val_losses) / len(val_losses)
+        # print(f"Validation loss at epoch {epoch} is {loss}")
         # val_targets = torch.cat(val_targets,dim=0)
         # val_preds = torch.cat(val_preds,dim=0)
         f1 = f1_score(val_targets,val_preds,average='micro')
         
-        # print(f'------Micro F1 score on dev set: {f1}------')
+        print(f'------Micro F1 score on dev set: {f1}------')
 
-        if loss < best_val_loss:
-            print(f"val loss less than previous best val loss of {best_val_loss}")
-            best_val_loss = loss
-            if args.save_model:
-                dir_name = f"seed_{args.seed}_parlen_{args.max_par_len}_seqlen_{args.max_seq_len}_lr_{args.lr}.pt"
-                output_path = os.path.join(args.save_path,dir_name)
-                if not os.path.exists(args.save_path):
-                    os.makedirs(args.save_path)
-                print(f"Saving model to path {output_path}")
-                torch.save(model,output_path)
+        # if loss < best_val_loss:
+        #     print(f"val loss less than previous best val loss of {best_val_loss}")
+        #     best_val_loss = loss
+        #     if args.save_model:
+        #         dir_name = f"seed_{args.seed}_parlen_{args.max_par_len}_seqlen_{args.max_seq_len}_lr_{args.lr}.pt"
+        #         output_path = os.path.join(args.save_path,dir_name)
+        #         if not os.path.exists(args.save_path):
+        #             os.makedirs(args.save_path)
+        #         print(f"Saving model to path {output_path}")
+        #         torch.save(model,output_path)
 
         # Testing
         if epoch % args.test_interval == 0:
@@ -235,7 +239,8 @@ def train(args):
                 target = target.to(device)
                 with torch.no_grad():
                     output = model(inp_data,target[:,:-1],training=False)
-                output = torch.softmax(output,dim=-1).argmax(dim=-1)
+                    
+                # output = torch.softmax(output,dim=-1).argmax(dim=-1)
                 flattened_target = target[:,1:].to('cpu').flatten()
                 flattened_preds = output.to('cpu').flatten()
                 for target_i,pred_i in zip(flattened_target,flattened_preds):

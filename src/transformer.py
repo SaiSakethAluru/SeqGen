@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from src.sent_encoder import SentenceEncoder
 from src.decoder import Decoder
-# from torchcrf import CRF
+from torchcrf import CRF
 
 class Transformer(nn.Module):
     def __init__(
@@ -57,7 +57,7 @@ class Transformer(nn.Module):
         #     max_seq_len,
         #     embed_path
         self.fc_out = nn.Linear(embed_size,len(label_list)+2)
-        # self.crf = CRF(len(label_list)+2, batch_first = True)
+        self.crf = CRF(len(label_list)+2, batch_first = True)
         self.src_pad_idx = src_pad_idx
         self.trg_pad_idx = trg_pad_idx
         self.device = device
@@ -80,6 +80,10 @@ class Transformer(nn.Module):
         )
         return trg_mask.to(self.device)
 
+    def make_crf_trg_mask(self, trg):
+        trg_mask = (trg != self.trg_pad_idx)
+        return trg_mask.to(self.device)
+
     def forward(self,src,trg, training):
         # print('transformer src.shape',src.shape)
         # src --> N, par_len, seq_len -> 2,3,10
@@ -88,6 +92,7 @@ class Transformer(nn.Module):
         src_mask = self.make_src_mask(src)
         # src_mask --> N,par_len, seq_len -> 2,3,10
         # trg_mask = self.make_trg_mask(trg)
+        trg_mask = self.make_crf_trg_mask(trg)
         # trg_mask --> N, 1, par_len, par_len -> 2,1,3,3
         # print('transformer src_mask.shape',src_mask.shape)
         # print('transformer trg_mask.shape',trg_mask.shape)
@@ -97,11 +102,12 @@ class Transformer(nn.Module):
         
         out = self.fc_out(enc_out)
 
-        # if training:
-        #     crf_out = self.crf(out, trg)
+        if training:
+            crf_out = self.crf(out, trg, trg_mask)
 
-        # else:
-        #     crf_out = self.crf.decode(out)
+        else:
+            # loss = self.crf(out,trg,trg_mask)     ## should this be here to get val loss? 
+            crf_out = self.crf.decode(out,trg_mask)
     
         return out
 
