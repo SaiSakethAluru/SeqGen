@@ -160,7 +160,7 @@ def train(args):
 
             # loss = criterion(output,target)
             # loss.retain_grad()
-            losses.append(loss.item())
+            losses.append(-1 * loss.item())
 
             # print(f'{epoch} loss grads before', list(loss.grad)[-1])
             loss.backward()
@@ -199,7 +199,7 @@ def train(args):
             # val_losses.append(loss)
             flattened_target = target[:,1:].to('cpu').flatten()
             # flattened_preds = torch.softmax(output,dim=-1).argmax(dim=-1).to('cpu').flatten()
-            flattened_preds = output.to('cpu').flatten()
+            flattened_preds = torch.Tensor(output).to('cpu').flatten()
             for target_i,pred_i in zip(flattened_target,flattened_preds):
                 if target_i != 0:
                     val_targets.append(target_i)
@@ -242,7 +242,7 @@ def train(args):
                     
                 # output = torch.softmax(output,dim=-1).argmax(dim=-1)
                 flattened_target = target[:,1:].to('cpu').flatten()
-                flattened_preds = output.to('cpu').flatten()
+                flattened_preds = torch.Tensor(output).to('cpu').flatten()
                 for target_i,pred_i in zip(flattened_target,flattened_preds):
                     if target_i!=0:
                         test_targets.append(target_i)

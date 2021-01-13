@@ -103,13 +103,13 @@ class Transformer(nn.Module):
         out = self.fc_out(enc_out)
 
         if training:
-            crf_out = self.crf(out, trg, trg_mask)
+            crf_out = self.crf(out, trg, trg_mask, reduction='token_mean')
 
         else:
             # loss = self.crf(out,trg,trg_mask)     ## should this be here to get val loss? 
             crf_out = self.crf.decode(out,trg_mask)
     
-        return out
+        return crf_out
 
         # # enc_out --> N,par_len,embed_size -> 2,3,8
         # # enc_word_out --> N,par_len, seq_len, embed_size -> 2,3,10,8
