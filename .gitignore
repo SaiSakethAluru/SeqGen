@@ -1,2 +1,4 @@
 .vscode
 data/glove*
+models/*
+*__pycache__*
