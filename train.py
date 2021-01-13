@@ -12,6 +12,15 @@ from sklearn.metrics import f1_score
 # LABEL_LIST = ['background','objective','methods','results','conclusions']   #pubmed
 LABEL_LIST = ['background','intervention','study design','population','outcome','other']
 
+def convert_crf_output_to_tensor(output, max_par_len):
+    out = []
+    for o in output:
+        if(len(o) < max_par_len):
+            pad = [0 for _ in range(max_par_len - len(o))]
+            o.extend(pad)
+        out.append(o[:max_par_len])
+    return torch.Tensor(out)
+        
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--batch_size", type=int, default=32)    ## debug: increase later
@@ -137,7 +146,7 @@ def train(args):
             optimizer.zero_grad()
 
             # output = model(inp_data.long(),target[:,1:], training=True)       ## N,par_len, label_size
-            loss = model(inp_data.long(),target[:,1:], training=True)       ## directly gives loss when training = True
+            loss = -model(inp_data.long(),target[:,1:], training=True)       ## directly gives loss when training = True
 
 
             # output = model(inp_data,target[:,:-1])
@@ -160,7 +169,7 @@ def train(args):
 
             # loss = criterion(output,target)
             # loss.retain_grad()
-            losses.append(-1 * loss.item())
+            losses.append(loss.item())
 
             # print(f'{epoch} loss grads before', list(loss.grad)[-1])
             loss.backward()
@@ -198,8 +207,10 @@ def train(args):
 
             # val_losses.append(loss)
             flattened_target = target[:,1:].to('cpu').flatten()
+            # print(output)
+            output = convert_crf_output_to_tensor(output,args.max_par_len)
             # flattened_preds = torch.softmax(output,dim=-1).argmax(dim=-1).to('cpu').flatten()
-            flattened_preds = torch.Tensor(output).to('cpu').flatten()
+            flattened_preds = output.to('cpu').flatten()
             for target_i,pred_i in zip(flattened_target,flattened_preds):
                 if target_i != 0:
                     val_targets.append(target_i)
@@ -242,7 +253,8 @@ def train(args):
                     
                 # output = torch.softmax(output,dim=-1).argmax(dim=-1)
                 flattened_target = target[:,1:].to('cpu').flatten()
-                flattened_preds = torch.Tensor(output).to('cpu').flatten()
+                output = convert_crf_output_to_tensor(output,args.max_par_len)
+                flattened_preds = output.to('cpu').flatten()
                 for target_i,pred_i in zip(flattened_target,flattened_preds):
                     if target_i!=0:
                         test_targets.append(target_i)
