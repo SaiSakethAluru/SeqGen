@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from src.encoder_transformer_block import EncoderTransformerBlock
 # from src.word_encoder import WordEncoder
+from src.label_att_transformer_block import LabelAttTransformerBlock
 from transformers import AutoModel
 import pandas as pd
 import numpy as np
@@ -68,6 +69,14 @@ class SentenceEncoder(nn.Module):
         self.word_embedding = nn.Embedding(len(label_list),embed_size)
 
         self.position_embedding = nn.Embedding(max_par_len,embed_size)
+        self.word_label_layers = nn.ModuleList(
+            [
+                LabelAttTransformerBlock(
+                    embed_size, heads, dropout, forward_expansion, label_list
+                )
+                for _ in range(num_layers)
+            ]
+        )
         self.layers = nn.ModuleList(
             [
                 EncoderTransformerBlock(
@@ -123,6 +132,10 @@ class SentenceEncoder(nn.Module):
         # # print("sent label_embed.shape",label_embed.shape)
         # # mask = mask.permute(1,0,2)
         # # mask - N,par_len,seq_len
+        for layer in self.word_label_layers:
+            word_level_outputs = layer(word_level_outputs, label_embed,mask)
+        
+        out = word_level_outputs[:,:,0,:]
         mask = torch.any(mask.bool(),dim=2).int()
         # # mask - N,par_len --> mask now tells only if a sentence is padded one or not.
 

@@ -49,9 +49,9 @@ def load_data(data_path, max_par_len, label_list):
 
 def tokenize(paragraphs, tokenizer, max_par_len, max_seq_len, label_list):
     input_ids = []
-    global LABEL_ENCODE
-    if LABEL_ENCODE is None:
-        LABEL_ENCODE = get_label_encodes(tokenizer,label_list)
+    # global LABEL_ENCODE
+    # if LABEL_ENCODE is None:
+    #     LABEL_ENCODE = get_label_encodes(tokenizer,label_list)
     for para in paragraphs:
         sentences = sent_tokenize(para)
         para_ids = []
@@ -60,16 +60,18 @@ def tokenize(paragraphs, tokenizer, max_par_len, max_seq_len, label_list):
                 encoded_sent = tokenizer.encode(
                     sent,
                     add_special_tokens = True,
-                    max_length = max_seq_len - len(LABEL_ENCODE)
+                    # max_length = max_seq_len - len(LABEL_ENCODE)
+                    max_length = max_seq_len
                 )
             except ValueError: 
                 encoded_sent = tokenizer.encode(
                     '',
                     add_special_tokens = True,
-                    max_length = max_seq_len - len(LABEL_ENCODE)
+                    # max_length = max_seq_len - len(LABEL_ENCODE)
+                    max_length = max_seq_len
                 )
             
-            encoded_sent.extend(LABEL_ENCODE)
+            # encoded_sent.extend(LABEL_ENCODE)
             if(len(encoded_sent) < max_seq_len):
                 pad_words = [0 for _ in range(max_seq_len - len(encoded_sent))]
                 encoded_sent.extend(pad_words)
