@@ -44,6 +44,8 @@ def get_args():
     parser.add_argument('--seed',type=int,default=666)
     parser.add_argument('--test_interval',type=int,default=1)
     args = parser.parse_args()
+    print("Training arguments:")
+    print(args)
     return args
 
 def train(args):
