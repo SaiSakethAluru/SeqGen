@@ -115,9 +115,6 @@ class SentenceEncoder(nn.Module):
         # return pooled_output
 
         # # print("sent word_level_outputs.shape",word_level_outputs.shape)
-        out = self.dropout(
-            (pooled_output + self.position_embedding(positions))
-        )
         # # print("sent out.shape",out.shape)
         # # label_embed = [
         # #     self.word_embedding(label) for label in self.labels
@@ -136,6 +133,11 @@ class SentenceEncoder(nn.Module):
             word_level_outputs = layer(word_level_outputs, label_embed,mask)
         
         out = word_level_outputs[:,:,0,:]
+        
+        out = self.dropout(
+            (out + self.position_embedding(positions))
+        )
+
         mask = torch.any(mask.bool(),dim=2).int()
         # # mask - N,par_len --> mask now tells only if a sentence is padded one or not.
 

@@ -9,8 +9,8 @@ from src.transformer import Transformer
 import os
 from sklearn.metrics import f1_score
 
-# LABEL_LIST = ['background','objective','methods','results','conclusions']   #pubmed
-LABEL_LIST = ['background','intervention','study design','population','outcome','other']
+PUBMED_LABEL_LIST = ['background','objective','methods','results','conclusions']   #pubmed
+NICTA_LABEL_LIST = ['background','intervention','study design','population','outcome','other']  #nicta-pibosa
 
 def convert_crf_output_to_tensor(output, max_par_len):
     out = []
@@ -26,9 +26,9 @@ def get_args():
     parser.add_argument("--batch_size", type=int, default=32)    ## debug: increase later
     parser.add_argument('--num_epochs',type=int,default=50)
     parser.add_argument('--lr',type=float,default=1e-3)
-    # parser.add_argument('--momentum',type=float,default=0.9)
     parser.add_argument('--max_par_len',type=int,default=20)    ## debug: 
     parser.add_argument('--max_seq_len',type=int,default=128)    ## debug:
+    parser.add_argument('--dataset_name',type=str,default='pubmed', choices=['pubmed', 'nicta'])
     parser.add_argument('--train_data',type=str,default='data/nicta_piboso/train_clean.txt')
     parser.add_argument('--dev_data',type=str,default='data/nicta_piboso/dev_clean.txt')
     parser.add_argument('--test_data',type=str,default='data/nicta_piboso/test_clean.txt')
@@ -41,7 +41,7 @@ def get_args():
     parser.add_argument('--save_path',type=str,default='models/')
     parser.add_argument('--load_model',type=bool,default=False)
     parser.add_argument('--load_path',type=str,default='models/')
-    parser.add_argument('--seed',type=int,default=777)
+    parser.add_argument('--seed',type=int,default=666)
     parser.add_argument('--test_interval',type=int,default=1)
     args = parser.parse_args()
     return args
@@ -55,6 +55,11 @@ def train(args):
         device = torch.device('cpu')
         print('using cpu')
     
+    if args.dataset_name == 'pubmed':
+        LABEL_LIST = PUBMED_LABEL_LIST
+    elif args.dataset_name == 'nicta':
+        LABEL_LIST = NICTA_LABEL_LIST
+
     train_x,train_labels = load_data(args.train_data, args.max_par_len,LABEL_LIST)
     dev_x,dev_labels = load_data(args.dev_data, args.max_par_len,LABEL_LIST)
     test_x,test_labels = load_data(args.test_data, args.max_par_len,LABEL_LIST)
@@ -87,7 +92,6 @@ def train(args):
     training_generator = return_dataloader(inputs=train_x, labels=train_labels, params=training_params)
     dev_generator = return_dataloader(inputs=dev_x, labels=dev_labels, params=dev_params)
     test_generator = return_dataloader(inputs=test_x, labels=test_labels, params=test_params)   
-
 
     src_pad_idx = 0
     trg_pad_idx = 0
