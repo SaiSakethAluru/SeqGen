@@ -19,7 +19,7 @@ class SentenceEncoder(nn.Module):
         dropout, 
         max_par_len,
         max_seq_len,
-        embed_path = '../data/glove.6B.100d.txt'
+        bert_model="allenai/scibert_scivocab_uncased"
     ):
         super(SentenceEncoder,self).__init__()
         self.embed_size = embed_size
@@ -37,7 +37,7 @@ class SentenceEncoder(nn.Module):
         #     max_seq_len,
         #     embed_path
         # )
-        self.word_level_encoder = AutoModel.from_pretrained("allenai/scibert_scivocab_uncased")
+        self.word_level_encoder = AutoModel.from_pretrained(bert_model)
 
         for p in self.word_level_encoder.parameters():
             p.requires_grad = False

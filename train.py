@@ -32,7 +32,8 @@ def get_args():
     parser.add_argument('--train_data',type=str,default='data/nicta_piboso/train_clean.txt')
     parser.add_argument('--dev_data',type=str,default='data/nicta_piboso/dev_clean.txt')
     parser.add_argument('--test_data',type=str,default='data/nicta_piboso/test_clean.txt')
-    parser.add_argument('--embedding_path',type=str,default='data/glove.6B.100d.txt')
+    # parser.add_argument('--embedding_path',type=str,default='data/glove.6B.100d.txt')
+    parser.add_argument('--bert_model',type=str,default="allenai/scibert_scivocab_uncased")
     parser.add_argument('--embed_size',type=int,default=120)
     parser.add_argument('--forward_expansion',type=int,default=4)
     parser.add_argument('--num_layers',type=int,default=3)
@@ -66,7 +67,7 @@ def train(args):
     dev_x,dev_labels = load_data(args.dev_data, args.max_par_len,LABEL_LIST)
     test_x,test_labels = load_data(args.test_data, args.max_par_len,LABEL_LIST)
 
-    tokenizer = AutoTokenizer.from_pretrained("allenai/scibert_scivocab_uncased")
+    tokenizer = AutoTokenizer.from_pretrained(args.bert_model)
     train_x = tokenize_and_pad(train_x,tokenizer,args.max_par_len,args.max_seq_len, LABEL_LIST)  ## N, par_len, seq_len
     dev_x = tokenize_and_pad(dev_x,tokenizer,args.max_par_len, args.max_seq_len, LABEL_LIST)
     test_x = tokenize_and_pad(test_x,tokenizer, args.max_par_len, args.max_seq_len, LABEL_LIST)
@@ -109,7 +110,7 @@ def train(args):
         device=device,
         max_par_len=args.max_par_len,
         max_seq_len=args.max_seq_len,
-        embed_path=args.embedding_path
+        bert_model=args.bert_model
     )
     model = model.to(device).float()
     # for param in model.parameters():

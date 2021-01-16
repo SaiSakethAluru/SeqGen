@@ -18,7 +18,7 @@ class Transformer(nn.Module):
             device="cpu",
             max_par_len=10,
             max_seq_len=20,
-            embed_path='../data/glove.6B.100d.txt'
+            bert_model="allenai/scibert_scivocab_uncased"
     ):
         super(Transformer, self).__init__()
         self.encoder = SentenceEncoder(
@@ -31,7 +31,6 @@ class Transformer(nn.Module):
             dropout,
             max_par_len,
             max_seq_len,
-            embed_path
         )
         # self.decoder = Decoder(
         #     label_list,
