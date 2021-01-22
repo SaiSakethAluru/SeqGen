@@ -11,6 +11,7 @@ from sklearn.metrics import f1_score
 
 PUBMED_LABEL_LIST = ['background','objective','methods','results','conclusions']   #pubmed
 NICTA_LABEL_LIST = ['background','intervention','study design','population','outcome','other']  #nicta-pibosa
+CSABSTRACT_LABEL_LIST = ['background','method','result','objective','other']    #cs-abstract
 
 def convert_crf_output_to_tensor(output, max_par_len):
     out = []
@@ -28,7 +29,7 @@ def get_args():
     parser.add_argument('--lr',type=float,default=1e-3)
     parser.add_argument('--max_par_len',type=int,default=20)    ## debug: 
     parser.add_argument('--max_seq_len',type=int,default=128)    ## debug:
-    parser.add_argument('--dataset_name',type=str,default='pubmed', choices=['pubmed', 'nicta'])
+    parser.add_argument('--dataset_name',type=str,default='pubmed', choices=['pubmed', 'nicta','csabstract'])
     parser.add_argument('--train_data',type=str,default='data/nicta_piboso/train_clean.txt')
     parser.add_argument('--dev_data',type=str,default='data/nicta_piboso/dev_clean.txt')
     parser.add_argument('--test_data',type=str,default='data/nicta_piboso/test_clean.txt')
@@ -42,7 +43,7 @@ def get_args():
     parser.add_argument('--save_path',type=str,default='models/')
     parser.add_argument('--load_model',type=bool,default=False)
     parser.add_argument('--load_path',type=str,default='models/')
-    parser.add_argument('--seed',type=int,default=666)
+    parser.add_argument('--seed',type=int,default=1234)
     parser.add_argument('--test_interval',type=int,default=1)
     args = parser.parse_args()
     print("Training arguments:")
@@ -62,6 +63,8 @@ def train(args):
         LABEL_LIST = PUBMED_LABEL_LIST
     elif args.dataset_name == 'nicta':
         LABEL_LIST = NICTA_LABEL_LIST
+    elif args.dataset_name == 'csabstract':
+        LABEL_LIST = CSABSTRACT_LABEL_LIST
 
     train_x,train_labels = load_data(args.train_data, args.max_par_len,LABEL_LIST)
     dev_x,dev_labels = load_data(args.dev_data, args.max_par_len,LABEL_LIST)
