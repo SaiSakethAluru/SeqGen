@@ -36,13 +36,20 @@ class EncoderTransformerBlock(nn.Module):
         # attention - N,seq_len, embed_size
         # Add skip connection, run through normalization and finally dropout
         # x - N,seq_len, embed_size
+
         x = self.dropout(self.norm1(attention + query))
 
         label_x = self.label_attention(label_embed, label_embed, x, mask.permute(0, 1, 3, 2))
 
+        # label_x = self.label_attention(label_embed,label_embed,query,mask.permute(0,1,3,2))
+
+        
         # print('etb x.shape', x.shape)
         # x - N,seq_len, embed_size
+
         x = self.dropout(self.label_norm(x + label_x))
+        # x = self.dropout(self.label_norm(x+label_x+query))
+
         # print('etb x.shape', x.shape)
         # x - N,seq_len, embed_size
         forward = self.feed_forward(x)

@@ -119,6 +119,8 @@ class SentenceEncoder(nn.Module):
         # # label_embed = [
         # #     self.word_embedding(label) for label in self.labels
         # # ]
+
+
         label_embed = [
             self.word_embedding(torch.Tensor([self.labels.index(label)]).to(self.device).long()) for label in self.labels
         ]
@@ -129,10 +131,14 @@ class SentenceEncoder(nn.Module):
         # # print("sent label_embed.shape",label_embed.shape)
         # # mask = mask.permute(1,0,2)
         # # mask - N,par_len,seq_len
+        ## Uncomment for full model. Commented out for ablation.
         for layer in self.word_label_layers:
             word_level_outputs = layer(word_level_outputs, label_embed,mask)
         
         out = word_level_outputs[:,:,0,:]
+        
+        ## For ablation study
+        # return out
         
         out = self.dropout(
             (out + self.position_embedding(positions))
