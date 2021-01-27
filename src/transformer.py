@@ -18,7 +18,7 @@ class Transformer(nn.Module):
             device="cpu",
             max_par_len=10,
             max_seq_len=20,
-            bert_model="allenai/scibert_scivocab_uncased"
+            bert_model="allenai/scibert_scivocab_uncased",
     ):
         super(Transformer, self).__init__()
         self.encoder = SentenceEncoder(
@@ -83,7 +83,7 @@ class Transformer(nn.Module):
         trg_mask = (trg != self.trg_pad_idx)
         return trg_mask.to(self.device)
 
-    def forward(self,src,trg, training):
+    def forward(self,src,trg, training, att_heat_map=False):
         # print('transformer src.shape',src.shape)
         # src --> N, par_len, seq_len -> 2,3,10
         # print('transformer trg.shape',trg.shape)
@@ -97,7 +97,7 @@ class Transformer(nn.Module):
         # print('transformer trg_mask.shape',trg_mask.shape)
 
         # enc_out,enc_word_out = self.encoder(src,src_mask) 
-        enc_out = self.encoder(src,src_mask)
+        enc_out = self.encoder(src,src_mask, att_heat_map)
         
         out = self.fc_out(enc_out)
 

@@ -25,14 +25,14 @@ class LabelAttTransformerBlock(nn.Module):
 
         self.dropout = nn.Dropout(dropout)
 
-    def forward(self, query, label_embed, mask):
+    def forward(self, query, label_embed, mask, att_heat_map=False):
         # inputs - N,seq_len,embed_size
         # label_embed - num_labels,embed_size
         mask = mask.unsqueeze(1).unsqueeze(2)
         # print('etb x.shape', x.shape)
         # x - N,seq_len, embed_size
         # x = self.label_attention(x,label_embed,label_embed,mask)
-        x = self.label_attention(label_embed, label_embed, query, mask.permute(0, 1, 3, 2, 4))
+        x = self.label_attention(label_embed, label_embed, query, mask.permute(0, 1, 3, 2, 4), att_heat_map)
         # x = self.label_attention(label_embed,x,x,mask)
         # print('etb x.shape', x.shape)
         # x - N,seq_len, embed_size

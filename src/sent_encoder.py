@@ -86,7 +86,7 @@ class SentenceEncoder(nn.Module):
             ]
         )
         self.dropout = nn.Dropout(dropout)
-    def forward(self,x,mask):
+    def forward(self,x,mask, att_heat_map=False):
         N,par_len,seq_len = x.shape
         positions = torch.arange(0,par_len).expand(N,par_len).to(self.device)   #position - N,par_len
         
@@ -133,13 +133,13 @@ class SentenceEncoder(nn.Module):
         # # mask - N,par_len,seq_len
         ## Uncomment for full model. Commented out for ablation.
         for layer in self.word_label_layers:
-            word_level_outputs = layer(word_level_outputs, label_embed,mask)
+            word_level_outputs = layer(word_level_outputs, label_embed,mask, att_heat_map)
         
         out = word_level_outputs[:,:,0,:]
         
         ## For ablation study
         # return out
-        
+
         out = self.dropout(
             (out + self.position_embedding(positions))
         )

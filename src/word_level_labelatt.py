@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 
 
+
 class WordLabelAttention(nn.Module):
     def __init__(self, embed_size, heads):
         super(WordLabelAttention, self).__init__()
@@ -19,7 +20,7 @@ class WordLabelAttention(nn.Module):
         self.queries = nn.Linear(self.head_dim, self.head_dim, bias=False)
         self.fc_out = nn.Linear(heads * self.head_dim, embed_size)
 
-    def forward(self, values, keys, query, mask):
+    def forward(self, values, keys, query, mask, att_heat_map=False):
         # Get number of training examples
         # Value,Keys - N,num_labels,embed_size
         # Query - N,par_len,seq_len,embed_size
@@ -47,6 +48,22 @@ class WordLabelAttention(nn.Module):
         values = self.values(values)  # (N, value_len, heads, head_dim)
         keys = self.keys(keys)  # (N, key_len, heads, head_dim)
         queries = self.queries(query)  # (N, query_len, heads, heads_dim)
+
+        if att_heat_map:
+            temp_query = queries.reshape(N,query_len, query_seq_len, self.heads*self.head_dim)
+            temp_query = temp_query[0][0]       # seq_len x embed_size
+            temp_key = keys.reshape(N,key_len,self.heads*self.head_dim)
+            temp_key = temp_key[0]              # num_labels x embed_size
+            
+            dot_att = torch.matmul(temp_key, temp_query.t())  # num_labels x seq_len
+            with open('att_map.txt','w') as f:
+                for i in range(dot_att.shape[0]):
+                    f.write('label '+str(i)+'\n')
+                    f.write(str(dot_att[i]))
+                    f.write('--------------------\n')
+                    print('label '+str(i))
+                    print(dot_att[i])
+                    print('--------------------')
 
         # Einsum does matrix mult. for query*keys for each training example
         # with every other training example, don't be confused by einsum
