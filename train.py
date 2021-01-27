@@ -279,7 +279,7 @@ def train(args):
             f1 = f1_score(test_targets,test_preds,average='micro')
             print(f"------Micro F1 score on test set: {f1}------")
 
-        
+    model(train_x[0].unsqueeze(0),train_labels[0].unsqueeze(0),training=False,att_heat_map=True)    
 
             
 
