@@ -279,7 +279,31 @@ def train(args):
             f1 = f1_score(test_targets,test_preds,average='micro')
             print(f"------Micro F1 score on test set: {f1}------")
 
-    model(train_x[0].unsqueeze(0),train_labels[0].unsqueeze(0),training=False,att_heat_map=True)    
+    ## Uncomment for generating attention vectors. 
+    # Look into src/word_level_labelatt.py for details of computing and storing these attention scores
+    # att_x = train_x[:10,:,:].to(device)
+    # att_y = train_labels[:10,:].to(device)[:,:-1] 
+    # model(att_x,att_y,training=False,att_heat_map=True)    
+
+    EXT_LABEL_LIST = ['<PAD>','<SOS>']+LABEL_LIST
+    for batch_idx,batch in tqdm(enumerate(test_generator)):
+        inp_data,target = batch
+        inp_data = inp_data.to(device)
+        target = target.to(device)
+        with torch.no_grad():
+            output = model(inp_data,target[:,:-1],training=False)
+
+        flattened_target = target[:,1:].to('cpu').flatten()
+        output = convert_crf_output_to_tensor(output,args.max_par_len)
+        flattened_preds = output.to('cpu').flatten()
+
+        flattened_inp = inp_data.reshape(inp_data.shape[0]*inp_data.shape[1], -1)
+        with open("Errors.txt",'w') as f:        
+            for target_i,pred_i,inp_i in zip(flattened_target,flattened_preds,flattened):
+                if target_i!=0 and (target_i != pred_i):
+                    f.write(f"Target label: {EXT_LABEL_LIST[target_i]}, Predicted label: {EXT_LABEL_LIST[pred_i]}\n")
+                    f.write(tokenizer.decode(inp_i,skip_special_tokens=True))
+
 
             
 

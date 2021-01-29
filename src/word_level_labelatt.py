@@ -51,19 +51,33 @@ class WordLabelAttention(nn.Module):
 
         if att_heat_map:
             temp_query = queries.reshape(N,query_len, query_seq_len, self.heads*self.head_dim)
-            temp_query = temp_query[0][0]       # seq_len x embed_size
             temp_key = keys.reshape(N,key_len,self.heads*self.head_dim)
-            temp_key = temp_key[0]              # num_labels x embed_size
+            batch_scores = []
+            for b in range(temp_query.shape[0]):
+                att_scores = []
+                for i in range(temp_query.shape[1]):
+                    temp_q = temp_query[b][i]       # seq_len x embed_size ## ith sentence of abstract 0
+                    temp_k = temp_key[b]              # num_labels x embed_size
+                    dot_att = torch.matmul(temp_k, temp_q.t())  # num_labels x seq_len
+                    att_scores.append(dot_att)
+                att_scores = torch.stack(att_scores,dim=0)
+                batch_scores.append(att_scores)
+            batch_scores = torch.stack(batch_scores,dim=0)
+            torch.save(batch_scores,'batch_att_vectors.pt')    
+            # temp_query = queries.reshape(N,query_len, query_seq_len, self.heads*self.head_dim)
+            # temp_query = temp_query[0][1]       # seq_len x embed_size    ## second sentence of abstract 0
+            # temp_key = keys.reshape(N,key_len,self.heads*self.head_dim)
+            # temp_key = temp_key[0]              # num_labels x embed_size
             
-            dot_att = torch.matmul(temp_key, temp_query.t())  # num_labels x seq_len
-            with open('att_map.txt','w') as f:
-                for i in range(dot_att.shape[0]):
-                    f.write('label '+str(i)+'\n')
-                    f.write(str(dot_att[i]))
-                    f.write('--------------------\n')
-                    print('label '+str(i))
-                    print(dot_att[i])
-                    print('--------------------')
+            # dot_att = torch.matmul(temp_key, temp_query.t())  # num_labels x seq_len
+            # with open('att_map2.txt','w') as f:
+            #     for i in range(dot_att.shape[0]):
+            #         f.write('label '+str(i)+'\n')
+            #         f.write(str(dot_att[i]))
+            #         f.write('--------------------\n')
+            #         print('label '+str(i))
+            #         print(dot_att[i])
+            #         print('--------------------')
 
         # Einsum does matrix mult. for query*keys for each training example
         # with every other training example, don't be confused by einsum
