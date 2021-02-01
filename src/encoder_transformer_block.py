@@ -22,7 +22,7 @@ class EncoderTransformerBlock(nn.Module):
 
         self.dropout = nn.Dropout(dropout)
 
-    def forward(self, value, key, query, label_embed, mask):
+    def forward(self, value, key, query, label_embed, mask, att_heat_map=False):
         # inputs - N,seq_len,embed_size
         # label_embed - num_labels,embed_size
         # print('etb value.shape', value.shape)
@@ -39,7 +39,7 @@ class EncoderTransformerBlock(nn.Module):
 
         x = self.dropout(self.norm1(attention + query))
 
-        label_x = self.label_attention(label_embed, label_embed, x, mask.permute(0, 1, 3, 2))
+        label_x = self.label_attention(label_embed, label_embed, x, mask.permute(0, 1, 3, 2), att_heat_map)
 
         # label_x = self.label_attention(label_embed,label_embed,query,mask.permute(0,1,3,2))
 

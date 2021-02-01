@@ -149,7 +149,7 @@ class SentenceEncoder(nn.Module):
 
         # label_embed = None
         for layer in self.layers:
-            out = layer(out,out,out,label_embed,mask)
+            out = layer(out,out,out,label_embed,mask, att_heat_map)
         # # print('sent out.shape',out.shape)
         # # out - N,par_len,embed_size
         # # word_level_output - N,par_len, seq_len, embed_size - Basically for each element in the batch, 

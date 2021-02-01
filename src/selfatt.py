@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-
+import os
 
 class SelfAttention(nn.Module):
     def __init__(self, embed_size, heads):
@@ -20,7 +20,7 @@ class SelfAttention(nn.Module):
         self.queries = nn.Linear(self.head_dim, self.head_dim, bias=False)
         self.fc_out = nn.Linear(heads * self.head_dim, embed_size)
 
-    def forward(self, values, keys, query, mask):
+    def forward(self, values, keys, query, mask, att_heat_map = False):
         # Get number of training examples
         #Inputs - N,seq_len,embed_size
         N = query.shape[0]
@@ -46,6 +46,26 @@ class SelfAttention(nn.Module):
         values = self.values(values)  # (N, value_len, heads, head_dim)
         keys = self.keys(keys)  # (N, key_len, heads, head_dim)
         queries = self.queries(query)  # (N, query_len, heads, heads_dim)
+        if att_heat_map:
+            if os.path.exists('batch_sent_att_vectors.pt'):
+                b = list(torch.load('batch_sent_att_vectors.pt',map_location = self.device))
+            else:
+                b = []        
+            temp_query = queries.reshape(N,query_len,self.heads*self.head_dim)
+            temp_key = keys.reshape(N,key_len,self.heads*self.head_dim)
+            batch_scores = []
+            for batch in range(temp.query.shape[0]):
+                # att_scores = []
+                temp_q = temp_query[batch]          # par_len x embed_size
+                temp_k = temp_key[batch]            # num_lab x embed_size
+                dot_att = torch.matmul(temp_k, temp_q.t())      # num_lab x par_len
+                batch_scores.append(dot_att)
+            batch_scores = torch.stack(batch_scores,dim=0)      # N x num_lab x par_len 
+            b.append(batch_scores)
+            b = torch.stack(b,dim=0)
+            torch.save(b,'batch_sent_att_vectors.pt')
+            
+        # Final - num_layers x N x par_len x 
 
         # Einsum does matrix mult. for query*keys for each training example
         # with every other training example, don't be confused by einsum
