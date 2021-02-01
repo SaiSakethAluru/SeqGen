@@ -48,13 +48,13 @@ class SelfAttention(nn.Module):
         queries = self.queries(query)  # (N, query_len, heads, heads_dim)
         if att_heat_map:
             if os.path.exists('batch_sent_att_vectors.pt'):
-                b = list(torch.load('batch_sent_att_vectors.pt',map_location = self.device))
+                b = list(torch.load('batch_sent_att_vectors.pt'))
             else:
                 b = []        
             temp_query = queries.reshape(N,query_len,self.heads*self.head_dim)
             temp_key = keys.reshape(N,key_len,self.heads*self.head_dim)
             batch_scores = []
-            for batch in range(temp.query.shape[0]):
+            for batch in range(temp_query.shape[0]):
                 # att_scores = []
                 temp_q = temp_query[batch]          # par_len x embed_size
                 temp_k = temp_key[batch]            # num_lab x embed_size

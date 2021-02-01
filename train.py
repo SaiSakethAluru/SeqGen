@@ -281,29 +281,31 @@ def train(args):
 
     ## Uncomment for generating attention vectors. 
     # Look into src/word_level_labelatt.py for details of computing and storing these attention scores
-    # att_x = train_x[:10,:,:].to(device)
-    # att_y = train_labels[:10,:].to(device)[:,:-1] 
-    # model(att_x,att_y,training=False,att_heat_map=True)    
+    # Look into src/selfatt.py for sentence level attention scores
+    att_x = train_x[:10,:,:].to(device)
+    att_y = train_labels[:10,:].to(device)[:,:-1] 
+    model(att_x,att_y,training=False,att_heat_map=True)    
 
-    EXT_LABEL_LIST = ['<PAD>','<SOS>']+LABEL_LIST
-    with open("Errors.txt",'w',encoding='utf-8') as f:        
-        for batch_idx,batch in tqdm(enumerate(test_generator)):
-            inp_data,target = batch
-            inp_data = inp_data.to(device)
-            target = target.to(device)
-            with torch.no_grad():
-                output = model(inp_data,target[:,:-1],training=False)
+    ## Uncomment for getting error predictions
+    # EXT_LABEL_LIST = ['<PAD>','<SOS>']+LABEL_LIST
+    # with open("Errors.txt",'w',encoding='utf-8') as f:        
+    #     for batch_idx,batch in tqdm(enumerate(test_generator)):
+    #         inp_data,target = batch
+    #         inp_data = inp_data.to(device)
+    #         target = target.to(device)
+    #         with torch.no_grad():
+    #             output = model(inp_data,target[:,:-1],training=False)
 
-            flattened_target = target[:,1:].to('cpu').flatten()
-            output = convert_crf_output_to_tensor(output,args.max_par_len)
-            flattened_preds = output.to('cpu').flatten()
+    #         flattened_target = target[:,1:].to('cpu').flatten()
+    #         output = convert_crf_output_to_tensor(output,args.max_par_len)
+    #         flattened_preds = output.to('cpu').flatten()
 
-            flattened_inp = inp_data.reshape(inp_data.shape[0]*inp_data.shape[1], -1)
-            for target_i,pred_i,inp_i in zip(flattened_target,flattened_preds,flattened_inp):
-                if target_i!=0 and (target_i != pred_i):
-                    f.write(f"Target label: {EXT_LABEL_LIST[target_i.int()]}, Predicted label: {EXT_LABEL_LIST[pred_i.int()]}\n")
-                    f.write(tokenizer.decode(inp_i,skip_special_tokens=True))
-                    f.write("\n\n")
+    #         flattened_inp = inp_data.reshape(inp_data.shape[0]*inp_data.shape[1], -1)
+    #         for target_i,pred_i,inp_i in zip(flattened_target,flattened_preds,flattened_inp):
+    #             if target_i!=0 and (target_i != pred_i):
+    #                 f.write(f"Target label: {EXT_LABEL_LIST[target_i.int()]}, Predicted label: {EXT_LABEL_LIST[pred_i.int()]}\n")
+    #                 f.write(tokenizer.decode(inp_i,skip_special_tokens=True))
+    #                 f.write("\n\n")
 
 
             
