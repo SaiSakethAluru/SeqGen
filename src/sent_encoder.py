@@ -13,6 +13,7 @@ class SentenceEncoder(nn.Module):
         label_list,
         embed_size, 
         num_layers, 
+        batch_size,
         heads, 
         device, 
         forward_expansion, 
@@ -25,6 +26,7 @@ class SentenceEncoder(nn.Module):
         self.embed_size = embed_size
         self.device = device
         self.labels = label_list
+        self.batch_size = batch_size
         print(label_list)
         # self.word_level_encoder = WordEncoder(
         #     label_list, 
@@ -77,14 +79,19 @@ class SentenceEncoder(nn.Module):
                 for _ in range(num_layers)
             ]
         )
-        self.layers = nn.ModuleList(
-            [
-                EncoderTransformerBlock(
-                     embed_size, heads, dropout, forward_expansion, label_list
-                )
-                for _ in range(num_layers)
-            ]
-        )
+        ## Sentence level transformer layers
+        # self.layers = nn.ModuleList(
+        #     [
+        #         EncoderTransformerBlock(
+        #              embed_size, heads, dropout, forward_expansion, label_list
+        #         )
+        #         for _ in range(num_layers)
+        #     ]
+        # )
+        ## Use for baseline sentence level LSTM
+        self.sent_level_lstm = nn.LSTM(embed_size,embed_size, num_layers=num_layers, batch_first=True,dropout=dropout,bidirectional=True)
+        self.sent_level_lstm_cell = torch.randn(self.batch_size,num_layers*2, embed_size)
+        self.sent_level_lstm_hidden = torch.randn(self.batch_size,num_layers*2, embed_size)
         self.dropout = nn.Dropout(dropout)
     def forward(self,x,mask, att_heat_map=False):
         N,par_len,seq_len = x.shape
@@ -140,22 +147,32 @@ class SentenceEncoder(nn.Module):
         ## For ablation study
         # return out
 
-        out = self.dropout(
-            (out + self.position_embedding(positions))
-        )
+        ## Baseline -> LSTM in sentence level instead of Transformer
+        lstm_out,(lstm_last_hidden, lstm_last_cell) = self.sent_level_lstm(out,(self.sent_level_lstm_hidden,self.sent_level_lstm_cell))
 
-        mask = torch.any(mask.bool(),dim=2).int()
+        return lstm_last_hidden
+        ## Sentence level transformer
+
+        # CODE: sent level encoder begin
+        # out = self.dropout(
+        #     (out + self.position_embedding(positions))
+        # )
+        # mask = torch.any(mask.bool(),dim=2).int()
+        # CODE: sent level encoder end
         # # mask - N,par_len --> mask now tells only if a sentence is padded one or not.
 
         # label_embed = None
-        for layer in self.layers:
-            out = layer(out,out,out,label_embed,mask, att_heat_map)
+        # CODE: Sent level encoder begin
+        # for layer in self.layers:
+            # out = layer(out,out,out,label_embed,mask, att_heat_map)
+        # CODE: sent level encoder end
+
         # # print('sent out.shape',out.shape)
         # # out - N,par_len,embed_size
         # # word_level_output - N,par_len, seq_len, embed_size - Basically for each element in the batch, 
         # # for each sentence in the abstract, we have a embed_size vector for each word
         # return out, word_level_outputs
-        
-        return out
+        #CODE: sent level encoder return
+        # return out
 
 

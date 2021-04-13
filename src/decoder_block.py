@@ -3,7 +3,6 @@ import torch.nn as nn
 from src.selfatt import SelfAttention
 from src.decoder_transformer_block import DecoderTransformerBlock
 
-
 class DecoderBlock(nn.Module):
     def __init__(self, embed_size, heads, forward_expansion, dropout, device):
         super(DecoderBlock, self).__init__()
