@@ -105,7 +105,7 @@ def train(args):
         label_list=LABEL_LIST,
         src_pad_idx=src_pad_idx,
         trg_pad_idx=trg_pad_idx,
-        batch_size=batch_size,
+        batch_size=args.batch_size,
         embed_size=args.embed_size,
         num_layers=args.num_layers,   ## debug
         forward_expansion=args.forward_expansion,
