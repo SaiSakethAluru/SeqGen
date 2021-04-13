@@ -90,8 +90,8 @@ class SentenceEncoder(nn.Module):
         # )
         ## Use for baseline sentence level LSTM
         self.sent_level_lstm = nn.LSTM(embed_size,embed_size, num_layers=num_layers, batch_first=True,dropout=dropout,bidirectional=True)
-        self.sent_level_lstm_cell = torch.randn(num_layers*2, self.batch_size, embed_size)
-        self.sent_level_lstm_hidden = torch.randn(num_layers*2, self.batch_size, embed_size)
+        self.sent_level_lstm_cell = torch.randn(num_layers*2, self.batch_size, embed_size).to(device)
+        self.sent_level_lstm_hidden = torch.randn(num_layers*2, self.batch_size, embed_size).to(device)
         self.dropout = nn.Dropout(dropout)
     def forward(self,x,mask, att_heat_map=False):
         N,par_len,seq_len = x.shape
