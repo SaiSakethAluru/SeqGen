@@ -23,40 +23,14 @@ class EncoderTransformerBlock(nn.Module):
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, value, key, query, label_embed, mask, att_heat_map=False):
-        # inputs - N,seq_len,embed_size
-        # label_embed - num_labels,embed_size
-        # print('etb value.shape', value.shape)
-        # print('etb key.shape', key.shape)
-        # print('etb query.shape', query.shape)
-        # print('etb label_embed.shape', label_embed.shape)
         mask = mask.unsqueeze(1).unsqueeze(2)
-        # print('etb mask.shape', mask.shape)
         attention = self.attention(value, key, query, mask)
-        # print('etb attention.shape', attention.shape)
-        # attention - N,seq_len, embed_size
         # Add skip connection, run through normalization and finally dropout
-        # x - N,seq_len, embed_size
-
         x = self.dropout(self.norm1(attention + query))
 
         label_x = self.label_attention(label_embed, label_embed, x, mask.permute(0, 1, 3, 2), att_heat_map)
-
-        # label_x = self.label_attention(label_embed,label_embed,query,mask.permute(0,1,3,2))
-
-        
-        # print('etb x.shape', x.shape)
-        # x - N,seq_len, embed_size
-
         x = self.dropout(self.label_norm(x + label_x))
-        # x = self.dropout(self.label_norm(x+label_x+query))
-
-        # print('etb x.shape', x.shape)
-        # x - N,seq_len, embed_size
         forward = self.feed_forward(x)
-        # print('etb forward.shape', forward.shape)
-        # forward - N,seq_len,embed_size
         out = self.dropout(self.norm2(forward + x))
-        # print('etb out.shape', out.shape)
-        # out - N,seq_len,embed_size
         return out
 

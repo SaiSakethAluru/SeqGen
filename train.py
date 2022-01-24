@@ -24,16 +24,15 @@ def convert_crf_output_to_tensor(output, max_par_len):
         
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--batch_size", type=int, default=32)    ## debug: increase later
+    parser.add_argument("--batch_size", type=int, default=32)   
     parser.add_argument('--num_epochs',type=int,default=50)
     parser.add_argument('--lr',type=float,default=1e-3)
-    parser.add_argument('--max_par_len',type=int,default=20)    ## debug: 
-    parser.add_argument('--max_seq_len',type=int,default=128)    ## debug:
+    parser.add_argument('--max_par_len',type=int,default=20)    
+    parser.add_argument('--max_seq_len',type=int,default=128)  
     parser.add_argument('--dataset_name',type=str,default='pubmed', choices=['pubmed', 'nicta','csabstract'])
     parser.add_argument('--train_data',type=str,default='data/nicta_piboso/train_clean.txt')
     parser.add_argument('--dev_data',type=str,default='data/nicta_piboso/dev_clean.txt')
     parser.add_argument('--test_data',type=str,default='data/nicta_piboso/test_clean.txt')
-    # parser.add_argument('--embedding_path',type=str,default='data/glove.6B.100d.txt')
     parser.add_argument('--bert_model',type=str,default="allenai/scibert_scivocab_uncased")
     parser.add_argument('--embed_size',type=int,default=120)
     parser.add_argument('--forward_expansion',type=int,default=4)
@@ -75,9 +74,6 @@ def train(args):
     dev_x = tokenize_and_pad(dev_x,tokenizer,args.max_par_len, args.max_seq_len, LABEL_LIST)
     test_x = tokenize_and_pad(test_x,tokenizer, args.max_par_len, args.max_seq_len, LABEL_LIST)
 
-    # print('train_x[0]',train_x[0])
-    # print('train_x[0].shape',train_x[0].shape)
-    # quit()
     training_params = {
         "batch_size": args.batch_size,
         "shuffle": True,
@@ -116,17 +112,9 @@ def train(args):
         bert_model=args.bert_model
     )
     model = model.to(device).float()
-    # for param in model.parameters():
-    #     try:
-    #         torch.nn.init.xavier_uniform_(param)
-    #     except:
-    #         continue
     
     criterion = nn.CrossEntropyLoss(ignore_index=trg_pad_idx)
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=args.lr)
-    # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-    #     optimizer, factor=0.1, patience=10, verbose=True
-    # )
     
     epoch_losses = []
     best_val_loss = float('inf')
@@ -136,73 +124,27 @@ def train(args):
 
         losses = []
         for batch_idx,batch in tqdm(enumerate(training_generator)):
-            # print('batch',batch)
-            # print('type of batch',type(batch))
             inp_data,target = batch
-            # print('inp_data',inp_data)
-            # print('type(inp_data)',type(inp_data))
-            # print('target',target)
-            # print('type(target)',type(target))
-            # print('target.shape',target.shape)
             inp_data = inp_data.to(device)
-            # print('inp_data.shape',inp_data.shape)
             target = target.to(device)
-            # assert False
 
-            ## For generation
-            # output = model(inp_data.long(),target[:,:-1], training=True)       ## N,par_len, label_size
-            
             ## For CRF
             optimizer.zero_grad()
 
-            # output = model(inp_data.long(),target[:,1:], training=True)       ## N,par_len, label_size
             loss = -model(inp_data.long(),target[:,1:], training=True)       ## directly gives loss when training = True
 
 
-            # output = model(inp_data,target[:,:-1])
-
-            # print('model net',make_dot(output))
-            # print(make_dot(output))
-            # make_arch = make_dot(output)
-            # Source(make_arch).render('graph.png')
-            # assert False
-            ## output - N,par_len, num_labels --> N*par_len, num_labels
-            # output = output.reshape(-1,output.shape[2])
-            ## target -
-            # target = target[:,1:].reshape(-1)
-
-            # print('output.shape',output.shape)
-            # print('target.shape',target.shape)
-            # print(f'{epoch} model params', list(model.parameters())[-1])
-            # print('len params',len(list(model.parameters())))
-            # print('trainable params: ',len(list(filter(lambda p: p.requires_grad, model.parameters()))))
-
-            # loss = criterion(output,target)
-            # loss.retain_grad()
             losses.append(loss.item())
 
-            # print(f'{epoch} loss grads before', list(loss.grad)[-1])
             loss.backward()
-            # print(f'{epoch} loss grads after', loss.grad)
-            # print('model params')
-            # count = 0
-            # for p in model.parameters():
-            #     if p.grad is not None:
-            #         print(p.grad,p.grad.norm())
-            #         count +=1 
-            # print(f'non none grads are {count}')
-            # torch.nn.utils.clip_grad_norm_(model.parameters(),max_norm=1)
 
             optimizer.step()
-            # break #NOTE: break is there only for quick checking. Remove this for actual training.
             
         mean_loss = sum(losses)/len(losses)
-        # scheduler.step(mean_loss)
 
         print(f"Mean loss for epoch {epoch} is {mean_loss}")
         # Validation
         model.eval()
-        # val_losses = []
         val_targets = []
         val_preds = []
         for batch_idx,batch in tqdm(enumerate(dev_generator)):
@@ -211,43 +153,29 @@ def train(args):
             target = target.to(device)
             with torch.no_grad():
                 output = model(inp_data,target[:,:-1], training=False)      ## directly we get the labels here, instead of logits
-                # reshaped_output = output.reshape(-1,output.shape[2])
-                # reshaped_target = target[:,1:].reshape(-1)
-                # loss = criterion(reshaped_output,reshaped_target).item()
 
-            # val_losses.append(loss)
             flattened_target = target[:,1:].to('cpu').flatten()
-            # print(output)
             output = convert_crf_output_to_tensor(output,args.max_par_len)
-            # flattened_preds = torch.softmax(output,dim=-1).argmax(dim=-1).to('cpu').flatten()
             flattened_preds = output.to('cpu').flatten()
             for target_i,pred_i in zip(flattened_target,flattened_preds):
                 if target_i != 0:
                     val_targets.append(target_i)
                     val_preds.append(pred_i)
-            # val_targets.append(target[:,1:].to('cpu').flatten())
-            # output = torch.softmax(output,dim=-1).argmax(dim=-1)
-            # val_preds.append(output.to('cpu').flatten())
-            # break #NOTE: break is there only for quick checking. Remove this for actual training.
 
-        # loss = sum(val_losses) / len(val_losses)
-        # print(f"Validation loss at epoch {epoch} is {loss}")
-        # val_targets = torch.cat(val_targets,dim=0)
-        # val_preds = torch.cat(val_preds,dim=0)
         f1 = f1_score(val_targets,val_preds,average='micro')
         
         print(f'------Micro F1 score on dev set: {f1}------')
 
-        # if loss < best_val_loss:
-        #     print(f"val loss less than previous best val loss of {best_val_loss}")
-        #     best_val_loss = loss
-        #     if args.save_model:
-        #         dir_name = f"seed_{args.seed}_parlen_{args.max_par_len}_seqlen_{args.max_seq_len}_lr_{args.lr}.pt"
-        #         output_path = os.path.join(args.save_path,dir_name)
-        #         if not os.path.exists(args.save_path):
-        #             os.makedirs(args.save_path)
-        #         print(f"Saving model to path {output_path}")
-        #         torch.save(model,output_path)
+        if loss < best_val_loss:
+            print(f"val loss less than previous best val loss of {best_val_loss}")
+            best_val_loss = loss
+            if args.save_model:
+                dir_name = f"seed_{args.seed}_parlen_{args.max_par_len}_seqlen_{args.max_seq_len}_lr_{args.lr}.pt"
+                output_path = os.path.join(args.save_path,dir_name)
+                if not os.path.exists(args.save_path):
+                    os.makedirs(args.save_path)
+                print(f"Saving model to path {output_path}")
+                torch.save(model,output_path)
 
         # Testing
         if epoch % args.test_interval == 0:
@@ -261,7 +189,6 @@ def train(args):
                 with torch.no_grad():
                     output = model(inp_data,target[:,:-1],training=False)
                     
-                # output = torch.softmax(output,dim=-1).argmax(dim=-1)
                 flattened_target = target[:,1:].to('cpu').flatten()
                 output = convert_crf_output_to_tensor(output,args.max_par_len)
                 flattened_preds = output.to('cpu').flatten()
@@ -269,22 +196,16 @@ def train(args):
                     if target_i!=0:
                         test_targets.append(target_i)
                         test_preds.append(pred_i)
-                # test_targets.append(target[:,1:].to('cpu').flatten())
-                # test_preds.append(output.to('cpu').flatten())
-                # break  #NOTE: break is there only for quick checking. Remove this for actual training. 
             
-            # test_targets = torch.cat(test_targets,dim=0)
-            # test_preds = torch.cat(test_preds,dim=0)
-            # f1 = f1_score(target[:,1:].to('cpu').flatten(),output.to('cpu').flatten(),average='macro')
             f1 = f1_score(test_targets,test_preds,average='micro')
             print(f"------Micro F1 score on test set: {f1}------")
 
     ## Uncomment for generating attention vectors. 
-    # Look into src/word_level_labelatt.py for details of computing and storing these attention scores
-    # Look into src/selfatt.py for sentence level attention scores
-    att_x = train_x[:10,:,:].to(device)
-    att_y = train_labels[:10,:].to(device)[:,:-1] 
-    model(att_x,att_y,training=False,att_heat_map=True)    
+    ## Look into src/word_level_labelatt.py for details of computing and storing these attention scores
+    ## Look into src/selfatt.py for sentence level attention scores
+    # att_x = train_x[:10,:,:].to(device)
+    # att_y = train_labels[:10,:].to(device)[:,:-1] 
+    # model(att_x,att_y,training=False,att_heat_map=True)    
 
     ## Uncomment for getting error predictions
     # EXT_LABEL_LIST = ['<PAD>','<SOS>']+LABEL_LIST

@@ -1,11 +1,8 @@
 import transformers
-# from torch.nn.utils.rnn import pad_sequence
 import torch
 from torch.utils.data import TensorDataset, DataLoader 
 from nltk.tokenize import sent_tokenize
 
-# LABEL_LIST = ['background','objective','methods','results','conclusions']   ## 0 - <pad>, 1 - <sos>, 2 - <background> and so on 
-# LABEL_LIST = ['background','intervention','study','population','outcome','other']   ## nicta_piboso
 
 
 LABEL_ENCODE = None
@@ -41,17 +38,12 @@ def load_data(data_path, max_par_len, label_list):
             abstract += txt.lower()+'\n'
             abs_labels.append(label_list.index(label.lower())+2)
         
-    # texts = texts[:30]
-    # labels = labels[:30]
     return texts, torch.Tensor(labels).long()
 
 
 
 def tokenize(paragraphs, tokenizer, max_par_len, max_seq_len, label_list):
     input_ids = []
-    # global LABEL_ENCODE
-    # if LABEL_ENCODE is None:
-    #     LABEL_ENCODE = get_label_encodes(tokenizer,label_list)
     for para in paragraphs:
         sentences = sent_tokenize(para)
         para_ids = []
@@ -60,18 +52,15 @@ def tokenize(paragraphs, tokenizer, max_par_len, max_seq_len, label_list):
                 encoded_sent = tokenizer.encode(
                     sent,
                     add_special_tokens = True,
-                    # max_length = max_seq_len - len(LABEL_ENCODE)
                     max_length = max_seq_len
                 )
             except ValueError: 
                 encoded_sent = tokenizer.encode(
                     '',
                     add_special_tokens = True,
-                    # max_length = max_seq_len - len(LABEL_ENCODE)
                     max_length = max_seq_len
                 )
             
-            # encoded_sent.extend(LABEL_ENCODE)
             if(len(encoded_sent) < max_seq_len):
                 pad_words = [0 for _ in range(max_seq_len - len(encoded_sent))]
                 encoded_sent.extend(pad_words)
@@ -86,11 +75,8 @@ def tokenize(paragraphs, tokenizer, max_par_len, max_seq_len, label_list):
 
 def tokenize_and_pad(paragraphs, tokenizer, max_par_len, max_seq_len, label_list):
     input_ids = tokenize(paragraphs,tokenizer,max_par_len,max_seq_len, label_list)
-    # input_ids = pad_sequence(input_ids,batch_first=True)
     input_ids = torch.Tensor(input_ids).long()
-    input_ids = input_ids[:,:max_par_len, :max_seq_len]        ## Hopefully not required
-    # assert tuple(input_ids.shape) == tuple(len(paragraphs), max_par_len, max_seq_len)
-    # mask = (input_ids!=0).int()
+    input_ids = input_ids[:,:max_par_len, :max_seq_len]        
     return input_ids
 
 def return_dataloader(inputs, labels, params):
