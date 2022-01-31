@@ -1,4 +1,4 @@
-#LIHT: Label Informed Hierarchical Transformers for Sequential Sentence Classification in Scientific Abstracts
+# LIHT: Label Informed Hierarchical Transformers for Sequential Sentence Classification in Scientific Abstracts
 
 This is the repository containing the code to our LIHT paper. Use the train.py script to run the training / evaluation steps.
 The different arguments that can be passed to the script such as batch_size, learning_rate, etc can be found in the get_args method in train.py, along with their default values.
